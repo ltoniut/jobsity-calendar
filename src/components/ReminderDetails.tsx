@@ -48,7 +48,7 @@ export const Reminder = (props: Props) => {
   const handleChangeColor = (color: ColorResult) => {
     setColor(color.hex);
   };
-  /*
+
   // DEBUG API
   // API Reference https://developers.google.com/places/web-service/autocomplete
   const googlePlacesApiKey = "";
@@ -105,7 +105,6 @@ export const Reminder = (props: Props) => {
   );
 
   // Functionality to change date and city
-  */
   return (
     <div className={styles.component(color, props.positionX, props.positionY)}>
       <label>Message: </label>
@@ -126,9 +125,7 @@ export const Reminder = (props: Props) => {
         inputProps={{
           maxLength: 30,
         }}
-      />
-      {
-        " " /*}
+      />{" "}
       <section>
         <h4>GOOGLE PLACES API - DEBUG</h4>
         <div>
@@ -144,6 +141,7 @@ export const Reminder = (props: Props) => {
           )}
         </div>
       </section>
+      <label>Weather: </label>
       <section>
         <h4>OPEN WEATHER API - DEBUG</h4>
         <div>
@@ -157,9 +155,8 @@ export const Reminder = (props: Props) => {
               )
             )
           )}
-              </div>
-      </section>*/
-      }
+        </div>
+      </section>
       <br />
       <button onClick={() => setDisplayColors(true)}>Select Color: </button>
       {displayColors && <SketchPicker onChangeComplete={handleChangeColor} />}

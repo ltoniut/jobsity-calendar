@@ -1,12 +1,13 @@
 import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
-import { flow, pipe } from "fp-ts/lib/function";
+import { flow, Predicate } from "fp-ts/lib/function";
 import { DateTime, Info, Interval } from "luxon";
 import React, { useState } from "react";
 import { Day } from "./Day";
 import { colors } from "./theme";
 
 import { Props as ReminderProps, Reminder } from "./ReminderDetails";
+import { filter } from "fp-ts/lib/NonEmptyArray";
 const weekdays = Info.weekdays();
 
 interface Props {
@@ -14,7 +15,7 @@ interface Props {
 }
 
 export const Calendar = ({ date }: Props) => {
-  const reminders: Array<ReminderProps> = [];
+  const [reminders, setReminders] = useState<Array<ReminderProps>>([]);
   const [reminderData, setReminderData] = useState<ReminderProps>();
   const [displayReminder, setDisplayReminder] = useState<boolean>();
   const [curId, setCurId] = useState<number>(1);
@@ -28,7 +29,8 @@ export const Calendar = ({ date }: Props) => {
     day: DateTime,
     active: boolean,
     positionX: number,
-    positionY: number
+    positionY: number,
+    isEnding: boolean
   ) => {
     if (active) {
       const newReminder = {
@@ -40,17 +42,20 @@ export const Calendar = ({ date }: Props) => {
         id: curId,
         positionX: positionX,
         positionY: positionY,
+        isEnding: isEnding,
       };
       setCurId(curId + 1);
-      reminders.push(newReminder);
+      setReminders([...reminders, newReminder]);
+      console.log(newReminder);
+      console.log(reminders);
       openReminder(curId);
     }
   };
 
   const openReminder = (id: number) => {
-    console.log(reminders);
     setReminderData(reminders.find((r) => r.id === id));
-    console.log();
+    console.log(reminders);
+    console.log(id);
     setDisplayReminder(true);
   };
 
@@ -84,8 +89,10 @@ export const Calendar = ({ date }: Props) => {
                 key={d.toMillis()}
                 date={d}
                 active={monthInterval.contains(d)}
-                addReminder$={addReminder}
-                possibleReminders={reminders}
+                addReminder={addReminder}
+                reminders={A.filter((r: ReminderProps) => r.day.day === d.day)(
+                  reminders
+                )}
               />
             )
           )
@@ -94,6 +101,10 @@ export const Calendar = ({ date }: Props) => {
       {displayReminder && <Reminder {...(reminderData as ReminderProps)} />}
     </div>
   );
+};
+
+const pipe = <A, B>(a: A, b: (_: A) => B) => {
+  return b(a);
 };
 
 const styles = {

@@ -14,45 +14,31 @@ import { getOffset } from "../helpers/functions/getOffset";
 export interface Props {
   date: DateTime;
   active: boolean;
-  addReminder$: (
+  addReminder: (
     day: DateTime,
     active: boolean,
     positionX: number,
-    positionY: number
+    positionY: number,
+    isEnding: boolean
   ) => void;
-  possibleReminders: Array<ReminderProps>;
+  reminders: Array<ReminderProps>;
 }
 
-export const Day: FC<Props> = ({
-  date,
-  active,
-  addReminder$,
-  possibleReminders,
-}) => {
-  const [reminders, setReminders] = useState<Array<ReminderProps>>([]);
-
-  useEffect(() => {
-    setReminders([]);
-    possibleReminders.forEach((r) => {
-      console.log(r.day.day + "  " + date.day);
-      if (r.day.day === date.day) {
-        reminders.push(r);
-      }
-    });
-  }, [possibleReminders]);
-
+export const Day: FC<Props> = ({ date, active, addReminder, reminders }) => {
   const weekday = date.weekday;
   const isWeekend = weekday === 6 || weekday === 7;
+  const isEnding = 4 < weekday && weekday < 7;
 
   return (
     <div
       className={styles.component({ isWeekend })}
       onClick={(e) =>
-        addReminder$(
+        addReminder(
           date,
           active,
           getOffset(e.target as HTMLElement).right,
-          getOffset(e.target as HTMLElement).top
+          getOffset(e.target as HTMLElement).top,
+          isEnding
         )
       }
     >
