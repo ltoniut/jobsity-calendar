@@ -2,18 +2,44 @@ import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
 import { pipe } from "fp-ts/lib/pipeable";
 import { DateTime } from "luxon";
-import React, { FC, useState } from "react";
-import { Props as ReminderProps, ReminderThumbnail } from "./ReminderThumbnail";
+import React, { FC, useState, useEffect } from "react";
+import {
+  Props as ThumbnailProps,
+  ReminderThumbnail,
+} from "./ReminderThumbnail";
+import { Props as ReminderProps } from "./ReminderDetails";
 import { colors } from "./theme";
+import { getOffset } from "../helpers/functions/getOffset";
 
 export interface Props {
   date: DateTime;
   active: boolean;
+  addReminder$: (
+    day: DateTime,
+    active: boolean,
+    positionX: number,
+    positionY: number
+  ) => void;
+  possibleReminders: Array<ReminderProps>;
 }
 
-export const Day: FC<Props> = ({ date, active }) => {
-  const [reminders] = useState<Array<ReminderProps>>([]);
-  const [displayReminder, setDisplayReminder] = useState<boolean>(false);
+export const Day: FC<Props> = ({
+  date,
+  active,
+  addReminder$,
+  possibleReminders,
+}) => {
+  const [reminders, setReminders] = useState<Array<ReminderProps>>([]);
+
+  useEffect(() => {
+    setReminders([]);
+    possibleReminders.forEach((r) => {
+      console.log(r.day.day + "  " + date.day);
+      if (r.day.day === date.day) {
+        reminders.push(r);
+      }
+    });
+  }, [possibleReminders]);
 
   const weekday = date.weekday;
   const isWeekend = weekday === 6 || weekday === 7;
@@ -21,11 +47,14 @@ export const Day: FC<Props> = ({ date, active }) => {
   return (
     <div
       className={styles.component({ isWeekend })}
-      onClick={() => {
-        if (active) {
-          setDisplayReminder(true);
-        }
-      }}
+      onClick={(e) =>
+        addReminder$(
+          date,
+          active,
+          getOffset(e.target as HTMLElement).right,
+          getOffset(e.target as HTMLElement).top
+        )
+      }
     >
       <div className={styles.day({ active, isWeekend })}>{date.day}</div>
       <ul>
@@ -52,5 +81,8 @@ const styles = {
         ? colors.highlight
         : colors.active
       : colors.inactive};
+  `,
+  reminders: css`
+    padding-bottom: 0px;
   `,
 };

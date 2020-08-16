@@ -2,10 +2,11 @@ import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
 import { flow, pipe } from "fp-ts/lib/function";
 import { DateTime, Info, Interval } from "luxon";
-import React from "react";
+import React, { useState } from "react";
 import { Day } from "./Day";
 import { colors } from "./theme";
 
+import { Props as ReminderProps, Reminder } from "./ReminderDetails";
 const weekdays = Info.weekdays();
 
 interface Props {
@@ -13,10 +14,45 @@ interface Props {
 }
 
 export const Calendar = ({ date }: Props) => {
+  const reminders: Array<ReminderProps> = [];
+  const [reminderData, setReminderData] = useState<ReminderProps>();
+  const [displayReminder, setDisplayReminder] = useState<boolean>();
+  const [curId, setCurId] = useState<number>(1);
+
   const weekOffset = 1;
   const rightWeekOffset = pipe(weekdays, A.takeRight(weekOffset));
   const remainingWeekdays = pipe(weekdays, A.dropRight(weekOffset));
   const offsetWeekdays = [...rightWeekOffset, ...remainingWeekdays];
+
+  const addReminder = (
+    day: DateTime,
+    active: boolean,
+    positionX: number,
+    positionY: number
+  ) => {
+    if (active) {
+      const newReminder = {
+        color: "white",
+        day: day,
+        time: "00:00",
+        city: "",
+        message: "",
+        id: curId,
+        positionX: positionX,
+        positionY: positionY,
+      };
+      setCurId(curId + 1);
+      reminders.push(newReminder);
+      openReminder(curId);
+    }
+  };
+
+  const openReminder = (id: number) => {
+    console.log(reminders);
+    setReminderData(reminders.find((r) => r.id === id));
+    console.log();
+    setDisplayReminder(true);
+  };
 
   const monthInterval = Interval.fromDateTimes(
     date.startOf("month"),
@@ -48,11 +84,14 @@ export const Calendar = ({ date }: Props) => {
                 key={d.toMillis()}
                 date={d}
                 active={monthInterval.contains(d)}
+                addReminder$={addReminder}
+                possibleReminders={reminders}
               />
             )
           )
         )}
       </section>
+      {displayReminder && <Reminder {...(reminderData as ReminderProps)} />}
     </div>
   );
 };
