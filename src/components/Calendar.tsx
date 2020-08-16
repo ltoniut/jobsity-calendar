@@ -1,63 +1,29 @@
 import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
-import { flow, Predicate } from "fp-ts/lib/function";
+import { flow, pipe } from "fp-ts/lib/function";
 import { DateTime, Info, Interval } from "luxon";
 import React, { useState } from "react";
 import { Day } from "./Day";
 import { colors } from "./theme";
 
 import { Props as ReminderProps, Reminder } from "./ReminderDetails";
-import { filter } from "fp-ts/lib/NonEmptyArray";
+import { Env } from "../env";
 const weekdays = Info.weekdays();
 
 interface Props {
   date: DateTime;
+  env: Env;
 }
 
-export const Calendar = ({ date }: Props) => {
+export const Calendar = ({ date, env }: Props) => {
   const [reminders, setReminders] = useState<Array<ReminderProps>>([]);
   const [reminderData, setReminderData] = useState<ReminderProps>();
   const [displayReminder, setDisplayReminder] = useState<boolean>();
   const [curId, setCurId] = useState<number>(1);
-
   const weekOffset = 1;
   const rightWeekOffset = pipe(weekdays, A.takeRight(weekOffset));
   const remainingWeekdays = pipe(weekdays, A.dropRight(weekOffset));
   const offsetWeekdays = [...rightWeekOffset, ...remainingWeekdays];
-
-  const addReminder = (
-    day: DateTime,
-    active: boolean,
-    positionX: number,
-    positionY: number,
-    isEnding: boolean
-  ) => {
-    if (active) {
-      const newReminder = {
-        color: "white",
-        day: day,
-        time: "00:00",
-        city: "",
-        message: "",
-        id: curId,
-        positionX: positionX,
-        positionY: positionY,
-        isEnding: isEnding,
-      };
-      setCurId(curId + 1);
-      setReminders([...reminders, newReminder]);
-      console.log(newReminder);
-      console.log(reminders);
-      openReminder(curId);
-    }
-  };
-
-  const openReminder = (id: number) => {
-    setReminderData(reminders.find((r) => r.id === id));
-    console.log(reminders);
-    console.log(id);
-    setDisplayReminder(true);
-  };
 
   const monthInterval = Interval.fromDateTimes(
     date.startOf("month"),
@@ -89,7 +55,43 @@ export const Calendar = ({ date }: Props) => {
                 key={d.toMillis()}
                 date={d}
                 active={monthInterval.contains(d)}
-                addReminder={addReminder}
+                selectReminder={(key) => {
+                  setReminderData(
+                    A.filter((r: ReminderProps) => r.key === key)(reminders)[0]
+                  );
+                  if (reminderData) {
+                    setDisplayReminder(true);
+                  }
+                }}
+                addReminder={(
+                  day: DateTime,
+                  active: boolean,
+                  positionX: number,
+                  positionY: number,
+                  isEnding: boolean
+                ) => {
+                  if (active) {
+                    const newReminder = {
+                      color: "white",
+                      day: day,
+                      time: "00:00",
+                      city: "",
+                      message: "",
+                      key: curId,
+                      env: env,
+                      positionX: positionX,
+                      positionY: positionY,
+                      isEnding: isEnding,
+                    };
+                    setCurId(curId + 1);
+                    setReminders([...reminders, newReminder]);
+
+                    if (newReminder) {
+                      setReminderData(newReminder);
+                      setDisplayReminder(true);
+                    }
+                  }
+                }}
                 reminders={A.filter((r: ReminderProps) => r.day.day === d.day)(
                   reminders
                 )}
@@ -98,13 +100,9 @@ export const Calendar = ({ date }: Props) => {
           )
         )}
       </section>
-      {displayReminder && <Reminder {...(reminderData as ReminderProps)} />}
+      {displayReminder && reminderData && <Reminder {...reminderData} />}
     </div>
   );
-};
-
-const pipe = <A, B>(a: A, b: (_: A) => B) => {
-  return b(a);
 };
 
 const styles = {

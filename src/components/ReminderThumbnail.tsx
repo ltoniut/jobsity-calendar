@@ -4,24 +4,34 @@ import { Tooltip } from "@material-ui/core";
 
 export interface Props {
   [x: string]: any;
-  id: number;
+  key: number;
   color: string;
   message: string;
+  selectReminder: (id: number) => void;
 }
 
-export const ReminderThumbnail = ({ color, id, message }: Props) => (
-  <Tooltip title={message} placement="bottom">
-    <div className={styles.component({ color })} />
-  </Tooltip>
-);
+export const ReminderThumbnail = ({
+  color,
+  key,
+  message,
+  selectReminder,
+}: Props) => {
+  return (
+    <Tooltip title={message} placement="bottom">
+      <div
+        className={styles.component({ color })}
+        onClick={() => selectReminder(key)}
+      />
+    </Tooltip>
+  );
+};
 
 const styles = {
   component: ({ color }: { color: string }) => css`
-    width: 15%;
-    height: 15%;
+    width: 0.5rem;
+    height: 0.5rem;
     background-color: ${color};
     border-style: solid;
-    border-width: thick;
-    padding-bottom: 0;
+    border-width: thin;
   `,
 };

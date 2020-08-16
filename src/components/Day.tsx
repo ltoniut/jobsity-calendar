@@ -2,14 +2,11 @@ import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
 import { pipe } from "fp-ts/lib/pipeable";
 import { DateTime } from "luxon";
-import React, { FC, useState, useEffect } from "react";
-import {
-  Props as ThumbnailProps,
-  ReminderThumbnail,
-} from "./ReminderThumbnail";
-import { Props as ReminderProps } from "./ReminderDetails";
-import { colors } from "./theme";
+import React, { FC } from "react";
 import { getOffset } from "../helpers/functions/getOffset";
+import { Props as ReminderProps } from "./ReminderDetails";
+import { ReminderThumbnail } from "./ReminderThumbnail";
+import { colors } from "./theme";
 
 export interface Props {
   date: DateTime;
@@ -21,10 +18,17 @@ export interface Props {
     positionY: number,
     isEnding: boolean
   ) => void;
+  selectReminder: (id: number) => void;
   reminders: Array<ReminderProps>;
 }
 
-export const Day: FC<Props> = ({ date, active, addReminder, reminders }) => {
+export const Day = ({
+  date,
+  active,
+  addReminder,
+  selectReminder,
+  reminders,
+}: Props) => {
   const weekday = date.weekday;
   const isWeekend = weekday === 6 || weekday === 7;
   const isEnding = 4 < weekday && weekday < 7;
@@ -43,11 +47,19 @@ export const Day: FC<Props> = ({ date, active, addReminder, reminders }) => {
       }
     >
       <div className={styles.day({ active, isWeekend })}>{date.day}</div>
-      <ul>
-        {pipe(
-          reminders,
-          A.map((r) => <ReminderThumbnail {...r} />)
-        )}
+      <ul className={styles.reminders}>
+        {active &&
+          pipe(
+            reminders,
+            A.map((r) => (
+              <ReminderThumbnail
+                message={r.message}
+                color={r.color}
+                selectReminder={selectReminder}
+                key={r.key}
+              />
+            ))
+          )}
       </ul>
     </div>
   );
@@ -70,5 +82,6 @@ const styles = {
   `,
   reminders: css`
     padding-bottom: 0px;
+    padding-left: 0px;
   `,
 };

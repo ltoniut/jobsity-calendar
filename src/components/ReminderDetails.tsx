@@ -12,9 +12,11 @@ import * as TE from "fp-ts/lib/TaskEither";
 import { from } from "rxjs";
 import { IRestResponse, RestClient } from "typed-rest-client";
 import { lazyUnsubscribe } from "../helpers/functions/lazyUnsubscribe";
+import { Env } from "../env";
 
 export interface Props {
-  id: number;
+  key: number;
+  env: Env;
   color: string;
   day: DateTime;
   time: string;
@@ -22,6 +24,7 @@ export interface Props {
   message: string;
   positionX: number;
   positionY: number;
+  isEnding: boolean;
 }
 
 export const Reminder = (props: Props) => {
@@ -31,8 +34,6 @@ export const Reminder = (props: Props) => {
   const [displayColors, setDisplayColors] = useState<boolean>(false);
   const [message, setMessage] = useState<string>(props.message);
   const [weather, setWeather] = useState<string>("");
-
-  const userAgent = "challenge-calendar";
 
   const onChangeTime = (t: Moment | null) => {
     if (t) setTime(t.hours + "/" + t.minutes);
@@ -50,55 +51,31 @@ export const Reminder = (props: Props) => {
   };
 
   // DEBUG API
-  // API Reference https://developers.google.com/places/web-service/autocomplete
-  const googlePlacesApiKey = "";
   const [
     googlePlacesAutocompleteApiCall,
     setGooglePlacesAutocompleteApiCall,
   ] = useState<O.Option<E.Either<unknown, IRestResponse<unknown>>>>(
     () => O.none
   );
-  const googlePlacesClient = new RestClient(
-    userAgent,
-    "https://maps.googleapis.com"
-  );
   useEffect(
     () =>
       lazyUnsubscribe(
         from(
-          TE.tryCatch(
-            () =>
-              googlePlacesClient.get(
-                // `/maps/api/place/autocomplete/output?parameters`
-                `/maps/api/place/autocomplete`
-              ),
-            identity
-          )()
+          props.env.googlePlaceAPI.autocompleteCity({ search: "" })
         ).subscribe((x) => setGooglePlacesAutocompleteApiCall(O.some(x)))
       ),
     []
   );
 
-  // API Reference https://openweathermap.org/current
-  const openWeatherApiKey = "";
   const [openWeatherApiCall, setOpenWeatherApiCall] = useState<
     O.Option<E.Either<unknown, IRestResponse<unknown>>>
   >(() => O.none);
-  const openWeatherClient = new RestClient(
-    userAgent,
-    "https://api.openweathermap.org"
-  );
+
   useEffect(
     () =>
       lazyUnsubscribe(
         from(
-          TE.tryCatch(
-            () =>
-              openWeatherClient.get(
-                `data/2.5/weather?q=${props.city}&appid=${openWeatherApiKey}`
-              ),
-            identity
-          )()
+          props.env.openWeatherAPI.getCurrentWeather({ city: "Mar del Plata" })
         ).subscribe((x) => setOpenWeatherApiCall(O.some(x)))
       ),
     []
@@ -109,10 +86,11 @@ export const Reminder = (props: Props) => {
     <div className={styles.component(color, props.positionX, props.positionY)}>
       <label>Message: </label>
       <TextField
-        defaultValue={message}
+        value={message}
         inputProps={{
           maxLength: 30,
         }}
+        onChange={(e) => setMessage(e.target.value)}
       />
       <br />
       <label>Day: {props.day.toFormat("MM / dd")}</label>
@@ -125,6 +103,7 @@ export const Reminder = (props: Props) => {
         inputProps={{
           maxLength: 30,
         }}
+        onChange={(e) => setCity(e.target.value)}
       />{" "}
       <section>
         <h4>GOOGLE PLACES API - DEBUG</h4>
