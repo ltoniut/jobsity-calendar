@@ -24,6 +24,7 @@ export interface Props {
   message: string;
   positionX: number;
   positionY: number;
+  goesLeft: boolean;
   saveReminder: (props: Props) => void;
   deleteReminder: (id: number) => void;
 }
@@ -47,6 +48,7 @@ export const Reminder = (props: Props) => {
       time: timeO,
       city: city,
       message: message,
+      goesLeft: props.goesLeft,
       positionX: props.positionX,
       positionY: props.positionY,
       saveReminder: props.saveReminder,
@@ -96,7 +98,11 @@ export const Reminder = (props: Props) => {
 
   return (
     <form
-      className={styles.component({ x: props.positionX, y: props.positionY })}
+      className={styles.component({
+        x: props.positionX,
+        y: props.positionY,
+        goesLeft: props.goesLeft,
+      })}
       action=""
       onSubmit={(e) => {
         e.preventDefault();
@@ -171,18 +177,25 @@ export const Reminder = (props: Props) => {
 };
 
 const styles = {
-  component: ({ x, y }: { x: number; y: number }) => css`
+  component: ({
+    x,
+    y,
+    goesLeft,
+  }: {
+    x: number;
+    y: number;
+    goesLeft: boolean;
+  }) => css`
     background-color: white;
     border: 1px solid grey;
     display: flex;
     flex-direction: column;
     color: #000000;
     position: absolute;
-    left: ${x + 5}px;
-    top: ${y + 5}px;
     text-align: center;
     width: 200px;
     padding: 0.5rem;
+    ${direction(x, y, goesLeft)};
     > * {
       margin-bottom: 0.5rem;
     }
@@ -204,6 +217,17 @@ const styles = {
     border-width: thin;
   `,
 };
+
+const direction = (x: number, y: number, goesLeft: boolean) =>
+  goesLeft
+    ? css`
+        right: ${window.innerWidth - x + 5}px;
+        top: ${y + 5}px;
+      `
+    : css`
+        left: ${x + 5}px;
+        top: ${y + 5}px;
+      `;
 
 const colorChoices = [
   "red",

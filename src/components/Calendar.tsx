@@ -68,7 +68,8 @@ export const Calendar = ({ date, env }: Props) => {
                   day: DateTime,
                   active: boolean,
                   positionX: number,
-                  positionY: number
+                  positionY: number,
+                  goesLeft: boolean
                 ) => {
                   if (active) {
                     const newReminder: ReminderProps = {
@@ -79,6 +80,7 @@ export const Calendar = ({ date, env }: Props) => {
                       message: "",
                       id: currentKey,
                       env: env,
+                      goesLeft: goesLeft,
                       positionX: positionX,
                       positionY: positionY,
                       deleteReminder: (id: number) => {

@@ -21,7 +21,8 @@ export interface Props {
     day: DateTime,
     active: boolean,
     positionX: number,
-    positionY: number
+    positionY: number,
+    goesLeft: boolean
   ) => void;
   selectReminder: (id: number) => void;
   reminders: Array<ReminderProps>;
@@ -41,14 +42,16 @@ export const Day = ({
   return (
     <div
       className={styles.component({ isWeekend })}
-      onClick={(e) =>
-        addReminder(
+      onClick={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        return addReminder(
           date,
           active,
-          getOffset(e.currentTarget.getBoundingClientRect()).right,
-          getOffset(e.currentTarget.getBoundingClientRect()).top
-        )
-      }
+          isEnding ? rect.left : rect.right,
+          rect.top,
+          isEnding
+        );
+      }}
     >
       <div className={styles.day({ active, isWeekend })}>{date.day}</div>
       <ul className={styles.reminders}>
