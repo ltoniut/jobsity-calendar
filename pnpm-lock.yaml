@@ -5,8 +5,10 @@ dependencies:
   '@types/luxon': 1.24.3
   '@types/react-color': 3.0.4
   antd: 4.5.4_react-dom@16.13.1+react@16.13.1
+  axios: 0.19.2
   emotion: 10.0.27
   fp-ts: 2.8.1
+  io-ts: 2.2.9_fp-ts@2.8.1
   luxon: 1.24.1
   moment: 2.27.0
   react: 16.13.1
@@ -2630,6 +2632,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-zg7Hz2k5lI8kb7U32998pRRFin7zJlkfezGJjUc2heaD4Pw2wObakCDVzkKztTm/Ln7eiVvYsjqak0Ed4LkMDA==
+  /axios/0.19.2:
+    dependencies:
+      follow-redirects: 1.5.10
+    dev: false
+    resolution:
+      integrity: sha512-fjgm5MvRHLhx+osE2xoekY70AhARk3a6hkN+3Io1jc00jtquGvxYlKlsFUhmUET0V5te6CcZI7lcv2Ym61mjHA==
   /axobject-query/2.2.0:
     dev: false
     resolution:
@@ -4047,6 +4055,12 @@ packages:
     dev: false
     resolution:
       integrity: sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==
+  /debug/3.1.0:
+    dependencies:
+      ms: 2.0.0
+    dev: false
+    resolution:
+      integrity: sha512-OX8XqP7/1a9cqkxYw2yXss15f26NKWBpDXQd0/uK/KPqdQhxbPa994hnzjcE2VqQpDslf55723cKPUOGSmMY3g==
   /debug/3.2.6:
     dependencies:
       ms: 2.1.2
@@ -5211,6 +5225,14 @@ packages:
       node: '>=4.0'
     resolution:
       integrity: sha512-aq6gF1BEKje4a9i9+5jimNFIpq4Q1WiwBToeRK5NvZBd/TRsmW8BsJfOEGkr76TbOyPVD3OVDN910EcUNtRYEA==
+  /follow-redirects/1.5.10:
+    dependencies:
+      debug: 3.1.0
+    dev: false
+    engines:
+      node: '>=4.0'
+    resolution:
+      integrity: sha512-0V5l4Cizzvqt5D44aTXbFZz+FtyXV1vrDN6qrelxtfYQKW0KO0W2T/hkE8xvGa/540LkZlkaUjO4ailYTFtHVQ==
   /for-in/0.1.8:
     dev: false
     engines:
@@ -6008,6 +6030,14 @@ packages:
     dev: false
     resolution:
       integrity: sha512-phJfQVBuaJM5raOpJjSfkiD6BpbCE4Ns//LaXl6wGYtUBY83nWS6Rf9tXm2e8VaK60JEjYldbPif/A2B1C2gNA==
+  /io-ts/2.2.9_fp-ts@2.8.1:
+    dependencies:
+      fp-ts: 2.8.1
+    dev: false
+    peerDependencies:
+      fp-ts: ^2.0.0
+    resolution:
+      integrity: sha512-Q9ob1VnpwyNoMam/BO6hm2dF4uu+to8NWSZNsRW6Q2Ni38PadgLZSQDo0hW7CJFgpJkQw4BXGwXzjr7c47c+fw==
   /ip-regex/2.1.0:
     dev: false
     engines:
@@ -12293,8 +12323,10 @@ specifiers:
   '@types/luxon': ^1.24.3
   '@types/react-color': ^3.0.4
   antd: 4.5.4
+  axios: ^0.19.2
   emotion: 10.0.27
   fp-ts: 2.8.1
+  io-ts: ^2.2.9
   luxon: 1.24.1
   moment: 2.27.0
   react: 16.13.1

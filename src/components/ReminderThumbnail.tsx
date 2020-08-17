@@ -17,7 +17,7 @@ export const ReminderThumbnail = ({
   selectReminder,
 }: Props) => {
   return (
-    <Tooltip title={message} placement="bottom">
+    <Tooltip title={message + " " + id} placement="bottom">
       <div
         className={styles.component({ color })}
         onClick={(e) => {

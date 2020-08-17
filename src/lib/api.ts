@@ -1,13 +1,23 @@
-import { identity } from "fp-ts/lib/function";
+import { identity, pipe, constVoid, flow } from "fp-ts/lib/function";
 import * as TE from "fp-ts/lib/TaskEither";
-import { IRestResponse, RestClient } from "typed-rest-client";
+import * as T from "fp-ts/lib/Task";
+import * as E from "fp-ts/lib/Either";
+import * as t from "io-ts";
+import axios from "axios";
+import { IRestResponse } from "typed-rest-client";
 
 const userAgent = "challenge-calendar";
+
+const GooglePlaceAutocompleteCityC = t.type({
+  predictions: t.array(t.type({ description: t.string })),
+});
+
+type GooglePlaceAutocompleteT = t.TypeOf<typeof GooglePlaceAutocompleteCityC>;
 
 export interface GooglePlaceAPI {
   autocompleteCity: (_: {
     search: string;
-  }) => TE.TaskEither<unknown, IRestResponse<unknown>>;
+  }) => TE.TaskEither<void, GooglePlaceAutocompleteT>;
 }
 
 /**
@@ -15,18 +25,29 @@ export interface GooglePlaceAPI {
  * @param apiKey
  */
 export const googlePlaceAPI = (apiKey: string): GooglePlaceAPI => {
-  const googlePlacesClient = new RestClient(
-    userAgent,
-    "https://maps.googleapis.com"
-  );
   return {
     autocompleteCity: ({ search }) =>
-      TE.tryCatch(
-        () =>
-          googlePlacesClient.get(
-            `/maps/api/place/autocomplete/json?key=${apiKey}&input=${search}`
-          ),
-        identity
+      pipe(
+        TE.tryCatch(
+          () =>
+            axios.get(`http://gd.geobytes.com/AutoCompleteCity`, {
+              headers: {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Headers": "ACCEPT",
+              },
+              params: { q: search },
+            }),
+          constVoid
+        ),
+        T.map(
+          E.chain(
+            flow(
+              (x) => x.data,
+              GooglePlaceAutocompleteCityC.decode,
+              E.mapLeft(constVoid)
+            )
+          )
+        )
       ),
   };
 };
@@ -42,15 +63,13 @@ export interface OpenWeatherAPI {
  * @param apiKey
  */
 export const openWeatherAPI = (apiKey: string): OpenWeatherAPI => {
-  const openWeatherClient = new RestClient(
-    userAgent,
-    "https://api.openweathermap.org"
-  );
   return {
     getCurrentWeather: ({ city }) =>
       TE.tryCatch(
         () =>
-          openWeatherClient.get(`data/2.5/weather?q=${city}&appid=${apiKey}`),
+          axios.get(
+            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`
+          ),
         identity
       ),
   };

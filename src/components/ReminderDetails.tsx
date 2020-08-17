@@ -3,16 +3,19 @@ import { css, cx } from "emotion";
 import * as A from "fp-ts/lib/Array";
 import * as AP from "fp-ts/lib/Apply";
 import * as E from "fp-ts/lib/Either";
-import { pipe, flow } from "fp-ts/lib/function";
+import { pipe, flow, constVoid } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
 import { DateTime } from "luxon";
 import { Moment } from "moment";
 import React, { useEffect, useState } from "react";
-import { from } from "rxjs";
+import { from, timer, BehaviorSubject, Subject } from "rxjs";
+import { debounce } from "rxjs/operators";
 import { IRestResponse } from "typed-rest-client";
 import { Env } from "../env";
 import { lazyUnsubscribe } from "../helpers/functions/lazyUnsubscribe";
 import moment from "moment";
+import { useConst } from "../hooks/custom";
+import { useObservableState } from "../hooks/rxjs";
 
 export interface Props {
   id: number;
@@ -33,8 +36,7 @@ export const Reminder = (props: Props) => {
   const [timeO, setTimeO] = useState<O.Option<Moment>>(() => props.time);
   const [day, setDay] = useState<DateTime>(props.day);
   const [city, setCity] = useState(props.city);
-  const [cityFinder, setCityFinder] = useState(props.city);
-  const [cityOptions, setCityOptions] = useState<Array<string>>([]);
+  const [cityOptions, setCityOptions] = useState<Array<string>>(() => []);
   const [color, setColor] = useState<string>(props.color);
   const [message, setMessage] = useState<string>(props.message);
   const [weather, setWeather] = useState<string>("");
@@ -57,6 +59,12 @@ export const Reminder = (props: Props) => {
     };
   };
 
+  const cityInput$ = useConst(() => new Subject<string>());
+  const cityInput = useObservableState(
+    useConst(() => cityInput$.pipe(debounce(() => timer(400)))),
+    city
+  );
+
   // DEBUG API
   const [
     googlePlacesAutocompleteApiCall,
@@ -64,13 +72,20 @@ export const Reminder = (props: Props) => {
   ] = useState<O.Option<E.Either<unknown, IRestResponse<unknown>>>>(
     () => O.none
   );
-  useEffect(() => {
-    lazyUnsubscribe(
-      from(
-        props.env.googlePlaceAPI.autocompleteCity({ search: cityFinder })()
-      ).subscribe((x) => setGooglePlacesAutocompleteApiCall(O.some(x)))
-    );
-  }, [cityFinder]);
+
+  useEffect(
+    () =>
+      lazyUnsubscribe(
+        from(
+          props.env.googlePlaceAPI.autocompleteCity({ search: cityInput })()
+        ).subscribe({
+          next: E.fold(constVoid, (xs) =>
+            setCityOptions(A.array.map(xs.predictions, (p) => p.description))
+          ),
+        })
+      ),
+    [cityInput]
+  );
 
   const [openWeatherApiCall, setOpenWeatherApiCall] = useState<
     O.Option<E.Either<unknown, IRestResponse<unknown>>>
@@ -132,9 +147,9 @@ export const Reminder = (props: Props) => {
         <AutoComplete
           className={styles.autoSelect}
           placeholder="Search city"
-          onChange={setCityFinder}
+          onChange={(e) => cityInput$.next(e)}
         >
-          {setCityOptions}
+          {cityOptions}
         </AutoComplete>
       </div>
       <div>
