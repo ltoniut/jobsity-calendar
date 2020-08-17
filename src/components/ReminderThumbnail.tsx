@@ -4,7 +4,7 @@ import { Tooltip } from "@material-ui/core";
 
 export interface Props {
   [x: string]: any;
-  key: number;
+  id: number;
   color: string;
   message: string;
   selectReminder: (id: number) => void;
@@ -12,7 +12,7 @@ export interface Props {
 
 export const ReminderThumbnail = ({
   color,
-  key,
+  id,
   message,
   selectReminder,
 }: Props) => {
@@ -20,7 +20,10 @@ export const ReminderThumbnail = ({
     <Tooltip title={message} placement="bottom">
       <div
         className={styles.component({ color })}
-        onClick={() => selectReminder(key)}
+        onClick={(e) => {
+          selectReminder(id);
+          e.stopPropagation();
+        }}
       />
     </Tooltip>
   );
@@ -33,5 +36,6 @@ const styles = {
     background-color: ${color};
     border-style: solid;
     border-width: thin;
+    float: left;
   `,
 };

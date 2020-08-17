@@ -20,12 +20,14 @@ export const googlePlaceAPI = (apiKey: string): GooglePlaceAPI => {
     "https://maps.googleapis.com"
   );
   return {
-    autocompleteCity: ({ search }) => {
-      return TE.tryCatch(
-        () => googlePlacesClient.get(`/maps/api/place/autocomplete`),
+    autocompleteCity: ({ search }) =>
+      TE.tryCatch(
+        () =>
+          googlePlacesClient.get(
+            `/maps/api/place/autocomplete/json?key=${apiKey}&input=${search}`
+          ),
         identity
-      );
-    },
+      ),
   };
 };
 

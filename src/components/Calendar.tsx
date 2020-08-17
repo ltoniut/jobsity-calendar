@@ -1,13 +1,14 @@
 import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
 import { flow, pipe } from "fp-ts/lib/function";
+import * as O from "fp-ts/lib/Option";
 import { DateTime, Info, Interval } from "luxon";
 import React, { useState } from "react";
+import { Env } from "../env";
 import { Day } from "./Day";
+import { Props as ReminderProps, Reminder } from "./ReminderDetails";
 import { colors } from "./theme";
 
-import { Props as ReminderProps, Reminder } from "./ReminderDetails";
-import { Env } from "../env";
 const weekdays = Info.weekdays();
 
 interface Props {
@@ -19,7 +20,7 @@ export const Calendar = ({ date, env }: Props) => {
   const [reminders, setReminders] = useState<Array<ReminderProps>>([]);
   const [reminderData, setReminderData] = useState<ReminderProps>();
   const [displayReminder, setDisplayReminder] = useState<boolean>();
-  const [curId, setCurId] = useState<number>(1);
+  const [currentKey, setCurrentKey] = useState<number>(1);
   const weekOffset = 1;
   const rightWeekOffset = pipe(weekdays, A.takeRight(weekOffset));
   const remainingWeekdays = pipe(weekdays, A.dropRight(weekOffset));
@@ -41,7 +42,7 @@ export const Calendar = ({ date, env }: Props) => {
         <div className={styles.month}>{date.monthLong.toUpperCase()}</div>
         <div className={styles.weekdays}>
           {A.array.map(offsetWeekdays, (day) => (
-            <div key={day}>{day}</div>
+            <div id={day}>{day}</div>
           ))}
         </div>
       </header>
@@ -57,7 +58,7 @@ export const Calendar = ({ date, env }: Props) => {
                 active={monthInterval.contains(d)}
                 selectReminder={(key) => {
                   setReminderData(
-                    A.filter((r: ReminderProps) => r.key === key)(reminders)[0]
+                    A.filter((r: ReminderProps) => r.id === key)(reminders)[0]
                   );
                   if (reminderData) {
                     setDisplayReminder(true);
@@ -67,24 +68,32 @@ export const Calendar = ({ date, env }: Props) => {
                   day: DateTime,
                   active: boolean,
                   positionX: number,
-                  positionY: number,
-                  isEnding: boolean
+                  positionY: number
                 ) => {
                   if (active) {
-                    const newReminder = {
+                    const newReminder: ReminderProps = {
                       color: "white",
                       day: day,
-                      time: "00:00",
+                      time: O.none,
                       city: "",
                       message: "",
-                      key: curId,
+                      id: currentKey,
                       env: env,
                       positionX: positionX,
                       positionY: positionY,
-                      isEnding: isEnding,
-                    };
-                    setCurId(curId + 1);
-                    setReminders([...reminders, newReminder]);
+                      saveReminder: (newReminder: ReminderProps) => {
+                        let reminder = A.filter(
+                          (r: ReminderProps) => r.id === newReminder.id
+                        )(reminders)[0];
+                        if (!reminder) {
+                          setReminders([...reminders, newReminder]);
+                        } else {
+                          reminder = newReminder;
+                        }
+                        setDisplayReminder(false);
+                      },
+                    } as const;
+                    setCurrentKey(currentKey + 1);
 
                     if (newReminder) {
                       setReminderData(newReminder);

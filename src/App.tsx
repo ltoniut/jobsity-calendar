@@ -3,6 +3,7 @@ import React from "react";
 import "./App.css";
 import { Calendar } from "./components/Calendar";
 import { googlePlaceAPI, openWeatherAPI } from "./lib/api";
+import "antd/dist/antd.css";
 
 export const App = () => (
   <div className="App">

@@ -12510,22 +12510,22 @@ packages:
     resolution:
       integrity: sha512-AX3Zw5iPruN5ie6xGRIDgqkT+ZhnRlZMLMHAs8tg7nRruy2Nb+i5o9bwghAogtM08q1dpr2LVoS8KSTMYpWXUw==
 specifiers:
-  '@material-ui/core': ^4.11.0
+  '@material-ui/core': 4.11.0
   '@testing-library/jest-dom': ^4.2.4
   '@testing-library/react': ^9.5.0
   '@testing-library/user-event': ^7.2.1
   '@types/luxon': ^1.24.3
   '@types/react-color': ^3.0.4
-  antd: ^4.5.4
-  emotion: ^10.0.27
-  fp-ts: ^2.8.1
-  luxon: ^1.24.1
-  moment: ^2.27.0
-  react: ^16.13.1
-  react-color: ^2.18.1
-  react-dom: ^16.13.1
+  antd: 4.5.4
+  emotion: 10.0.27
+  fp-ts: 2.8.1
+  luxon: 1.24.1
+  moment: 2.27.0
+  react: 16.13.1
+  react-color: 2.18.1
+  react-dom: 16.13.1
   react-scripts: 3.4.3
-  redux: ^4.0.5
-  rxjs: ^6.6.2
-  typed-rest-client: ^1.7.3
-  typescript: ^3.9.7
+  redux: 4.0.5
+  rxjs: 6.6.2
+  typed-rest-client: 1.7.3
+  typescript: 3.9.7

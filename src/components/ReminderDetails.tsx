@@ -1,53 +1,56 @@
-import { TextField } from "@material-ui/core";
-import { TimePicker } from "antd";
-import { css } from "emotion";
-import { DateTime } from "luxon";
-import { identity, pipe } from "fp-ts/lib/function";
-import moment, { Moment } from "moment";
-import React, { useEffect, useState } from "react";
-import { SketchPicker, ColorResult } from "react-color";
+import { TimePicker, Input, DatePicker, AutoComplete } from "antd";
+import { css, cx } from "emotion";
+import * as A from "fp-ts/lib/Array";
+import * as AP from "fp-ts/lib/Apply";
 import * as E from "fp-ts/lib/Either";
+import { pipe, flow } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
-import * as TE from "fp-ts/lib/TaskEither";
+import { DateTime } from "luxon";
+import { Moment } from "moment";
+import React, { useEffect, useState } from "react";
 import { from } from "rxjs";
-import { IRestResponse, RestClient } from "typed-rest-client";
-import { lazyUnsubscribe } from "../helpers/functions/lazyUnsubscribe";
+import { IRestResponse } from "typed-rest-client";
 import { Env } from "../env";
+import { lazyUnsubscribe } from "../helpers/functions/lazyUnsubscribe";
+import moment from "moment";
 
 export interface Props {
-  key: number;
+  id: number;
   env: Env;
   color: string;
   day: DateTime;
-  time: string;
+  time: O.Option<Moment>;
   city: string;
   message: string;
   positionX: number;
   positionY: number;
-  isEnding: boolean;
+  saveReminder: (props: Props) => void;
 }
 
 export const Reminder = (props: Props) => {
-  const [time, setTime] = useState(props.time);
+  const [timeO, setTimeO] = useState<O.Option<Moment>>(() => props.time);
+  const [day, setDay] = useState<DateTime>(props.day);
   const [city, setCity] = useState(props.city);
+  const [cityFinder, setCityFinder] = useState(props.city);
   const [color, setColor] = useState<string>(props.color);
-  const [displayColors, setDisplayColors] = useState<boolean>(false);
   const [message, setMessage] = useState<string>(props.message);
   const [weather, setWeather] = useState<string>("");
+  const key = props.id;
 
-  const onChangeTime = (t: Moment | null) => {
-    if (t) setTime(t.hours + "/" + t.minutes);
-    else setTime("00:00");
-  };
-
-  useEffect(() => {
-    if (city && time) {
-      // Find weather
-    }
-  }, [city]);
-
-  const handleChangeColor = (color: ColorResult) => {
-    setColor(color.hex);
+  const updatedData: () => Props = () => {
+    console.log(key);
+    return {
+      id: key,
+      color: color,
+      env: props.env,
+      day: day,
+      time: timeO,
+      city: city,
+      message: message,
+      positionX: props.positionX,
+      positionY: props.positionY,
+      saveReminder: props.saveReminder,
+    };
   };
 
   // DEBUG API
@@ -61,98 +64,151 @@ export const Reminder = (props: Props) => {
     () =>
       lazyUnsubscribe(
         from(
-          props.env.googlePlaceAPI.autocompleteCity({ search: "" })
+          props.env.googlePlaceAPI.autocompleteCity({ search: cityFinder })()
         ).subscribe((x) => setGooglePlacesAutocompleteApiCall(O.some(x)))
       ),
-    []
+    [cityFinder]
   );
 
   const [openWeatherApiCall, setOpenWeatherApiCall] = useState<
     O.Option<E.Either<unknown, IRestResponse<unknown>>>
   >(() => O.none);
-
   useEffect(
     () =>
-      lazyUnsubscribe(
-        from(
-          props.env.openWeatherAPI.getCurrentWeather({ city: "Mar del Plata" })
-        ).subscribe((x) => setOpenWeatherApiCall(O.some(x)))
+      pipe(
+        { time: timeO },
+        AP.sequenceS(O.option),
+        O.fold(
+          () => {},
+          ({ time }) =>
+            lazyUnsubscribe(
+              from(
+                props.env.openWeatherAPI.getCurrentWeather({
+                  city,
+                })()
+              ).subscribe((x) => setOpenWeatherApiCall(O.some(x)))
+            )
+        )
       ),
-    []
+    [city, timeO]
   );
 
-  // Functionality to change date and city
   return (
-    <div className={styles.component(color, props.positionX, props.positionY)}>
-      <label>Message: </label>
-      <TextField
-        value={message}
-        inputProps={{
-          maxLength: 30,
+    <form
+      className={styles.component({ x: props.positionX, y: props.positionY })}
+      action=""
+      onSubmit={(e) => {
+        e.preventDefault();
+      }}
+    >
+      <div>{props.day.toFormat("MM / dd")}</div>
+      <DatePicker
+        defaultValue={moment(props.day.toRFC2822(), "DD-MMM-YYYY")}
+        onChange={(e) => {
+          if (e) setDay(DateTime.fromJSDate(e.toDate()));
         }}
-        onChange={(e) => setMessage(e.target.value)}
       />
-      <br />
-      <label>Day: {props.day.toFormat("MM / dd")}</label>
-      <br />
-      <TimePicker onChange={onChangeTime} />
-      <br />
-      <label>City: </label>
-      <TextField
-        defaultValue="City"
-        inputProps={{
-          maxLength: 30,
-        }}
-        onChange={(e) => setCity(e.target.value)}
-      />{" "}
-      <section>
-        <h4>GOOGLE PLACES API - DEBUG</h4>
-        <div>
-          {pipe(
-            googlePlacesAutocompleteApiCall,
-            O.fold(
-              () => <div>Nothing yet.</div>,
-              E.fold(
-                (e) => <div>Error: {JSON.stringify(e)}</div>,
-                (x) => <div>Result: {JSON.stringify(x)}</div>
-              )
+      <div>
+        <Input
+          name="message"
+          placeholder="Write some message"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+        />
+      </div>
+      <div>
+        <TimePicker
+          value={O.toNullable(timeO)}
+          onChange={flow(O.fromNullable, setTimeO)}
+        />
+      </div>
+      <div>
+        <AutoComplete placeholder="Search city" onChange={setCity} />
+      </div>
+      <div>
+        {pipe(
+          googlePlacesAutocompleteApiCall,
+          O.fold(
+            () => <div>Nothing yet.</div>,
+            E.fold(
+              (e) => <div>Error: {JSON.stringify(e)}</div>,
+              (x) => <div>Result: {JSON.stringify(x)}</div>
             )
-          )}
-        </div>
-      </section>
-      <label>Weather: </label>
-      <section>
-        <h4>OPEN WEATHER API - DEBUG</h4>
-        <div>
-          {pipe(
-            openWeatherApiCall,
-            O.fold(
-              () => <div>Nothing yet.</div>,
-              E.fold(
-                (e) => <div>Error: {JSON.stringify(e)}</div>,
-                (x) => <div>Result: {JSON.stringify(x)}</div>
-              )
+          )
+        )}
+      </div>
+      <div>
+        {pipe(
+          openWeatherApiCall,
+          O.fold(
+            () => <div>Nothing yet.</div>,
+            E.fold(
+              (e) => <div>Error: {JSON.stringify(e)}</div>,
+              (x) => <div>Result: {JSON.stringify(x)}</div>
             )
-          )}
-        </div>
-      </section>
-      <br />
-      <button onClick={() => setDisplayColors(true)}>Select Color: </button>
-      {displayColors && <SketchPicker onChangeComplete={handleChangeColor} />}
-      <br />
-    </div>
+          )
+        )}
+      </div>
+      <div className={styles.colorSelector}>
+        {pipe(
+          colorChoices,
+          A.map((r) => (
+            <div
+              className={cx([
+                styles.color(r),
+                ...(color === r ? [styles.selectedColor] : []),
+              ])}
+              onClick={() => setColor(r)}
+            />
+          ))
+        )}
+      </div>
+      <button onClick={() => props.saveReminder(updatedData())}>Save</button>
+    </form>
   );
 };
 
 const styles = {
-  component: (color: string, positionX: number, positionY: number) => css`
-    background-color: ${color};
+  component: ({ x, y }: { x: number; y: number }) => css`
+    background-color: white;
     border: 1px solid grey;
+    display: flex;
+    flex-direction: column;
     color: #000000;
-    text-align: center;
-    width: 20%;
     position: absolute;
-    left: ${positionX}px;
-    top: ${positionY}px;
+    left: ${x + 5}px;
+    top: ${y + 5}px;
+    text-align: center;
+    width: 200px;
+    padding: 0.5rem;
+    > * {
+      margin-bottom: 0.5rem;
+    }
+  `,
+  colorSelector: css`
+    display: grid;
+    grid-gap: 0.25rem;
+    grid-template-columns: repeat(auto-fit, 2rem);
+  `,
+  selectedColor: css`
+    border: 2px black solid;
+  `,
+  color: (color: string) => css`
+    background-color: ${color};
+    width: 2rem;
+    height: 2rem;
+    float: left;
+    border-style: solid;
+    border-width: thin;
   `,
 };
+
+const colorChoices = [
+  "red",
+  "orange",
+  "yellow",
+  "green",
+  "blue",
+  "purple",
+  "white",
+];
