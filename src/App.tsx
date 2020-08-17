@@ -10,7 +10,7 @@ export const App = () => (
     <Calendar
       env={{
         googlePlaceAPI: googlePlaceAPI(
-          "AIzaSyBCqMiTroIEMcSlR5aPrP49b31OnEkJtM8"
+          "AIzaSyAjxIN2ahfn9tZ8XHSjBE45AFLbNLbxUw4"
         ),
         openWeatherAPI: openWeatherAPI("c78e9ebc9005d5b2db1bd0fc80e530d5"),
       }}

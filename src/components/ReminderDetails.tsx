@@ -34,6 +34,7 @@ export const Reminder = (props: Props) => {
   const [day, setDay] = useState<DateTime>(props.day);
   const [city, setCity] = useState(props.city);
   const [cityFinder, setCityFinder] = useState(props.city);
+  const [cityOptions, setCityOptions] = useState<Array<string>>([]);
   const [color, setColor] = useState<string>(props.color);
   const [message, setMessage] = useState<string>(props.message);
   const [weather, setWeather] = useState<string>("");
@@ -63,15 +64,13 @@ export const Reminder = (props: Props) => {
   ] = useState<O.Option<E.Either<unknown, IRestResponse<unknown>>>>(
     () => O.none
   );
-  useEffect(
-    () =>
-      lazyUnsubscribe(
-        from(
-          props.env.googlePlaceAPI.autocompleteCity({ search: cityFinder })()
-        ).subscribe((x) => setGooglePlacesAutocompleteApiCall(O.some(x)))
-      ),
-    [cityFinder]
-  );
+  useEffect(() => {
+    lazyUnsubscribe(
+      from(
+        props.env.googlePlaceAPI.autocompleteCity({ search: cityFinder })()
+      ).subscribe((x) => setGooglePlacesAutocompleteApiCall(O.some(x)))
+    );
+  }, [cityFinder]);
 
   const [openWeatherApiCall, setOpenWeatherApiCall] = useState<
     O.Option<E.Either<unknown, IRestResponse<unknown>>>
@@ -130,7 +129,13 @@ export const Reminder = (props: Props) => {
         />
       </div>
       <div>
-        <AutoComplete placeholder="Search city" onChange={setCity} />
+        <AutoComplete
+          className={styles.autoSelect}
+          placeholder="Search city"
+          onChange={setCityFinder}
+        >
+          {setCityOptions}
+        </AutoComplete>
       </div>
       <div>
         {pipe(
@@ -151,7 +156,7 @@ export const Reminder = (props: Props) => {
             () => <div>Nothing yet.</div>,
             E.fold(
               (e) => <div>Error: {JSON.stringify(e)}</div>,
-              (x) => <div>Result: {JSON.stringify(x)}</div>
+              (x) => <div>Result: {JSON.stringify(x.result)}</div>
             )
           )
         )}
@@ -215,6 +220,9 @@ const styles = {
     float: left;
     border-style: solid;
     border-width: thin;
+  `,
+  autoSelect: css`
+    width: 80%;
   `,
 };
 
