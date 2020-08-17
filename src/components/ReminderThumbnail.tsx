@@ -1,6 +1,6 @@
 import { css } from "emotion";
 import React from "react";
-import { Tooltip } from "@material-ui/core";
+import { Tooltip } from "antd";
 
 export interface Props {
   [x: string]: any;

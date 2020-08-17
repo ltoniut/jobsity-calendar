@@ -25,6 +25,7 @@ export interface Props {
   positionX: number;
   positionY: number;
   saveReminder: (props: Props) => void;
+  deleteReminder: (id: number) => void;
 }
 
 export const Reminder = (props: Props) => {
@@ -38,7 +39,6 @@ export const Reminder = (props: Props) => {
   const key = props.id;
 
   const updatedData: () => Props = () => {
-    console.log(key);
     return {
       id: key,
       color: color,
@@ -50,6 +50,7 @@ export const Reminder = (props: Props) => {
       positionX: props.positionX,
       positionY: props.positionY,
       saveReminder: props.saveReminder,
+      deleteReminder: props.deleteReminder,
     };
   };
 
@@ -164,6 +165,7 @@ export const Reminder = (props: Props) => {
         )}
       </div>
       <button onClick={() => props.saveReminder(updatedData())}>Save</button>
+      <button onClick={() => props.deleteReminder(props.id)}>Delete</button>
     </form>
   );
 };

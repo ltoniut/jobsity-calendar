@@ -81,6 +81,13 @@ export const Calendar = ({ date, env }: Props) => {
                       env: env,
                       positionX: positionX,
                       positionY: positionY,
+                      deleteReminder: (id: number) => {
+                        const filteredReminders = A.filter(
+                          (r: ReminderProps) => r.id !== id
+                        )(reminders);
+                        setReminders(filteredReminders);
+                        setDisplayReminder(false);
+                      },
                       saveReminder: (newReminder: ReminderProps) => {
                         let reminder = A.filter(
                           (r: ReminderProps) => r.id === newReminder.id

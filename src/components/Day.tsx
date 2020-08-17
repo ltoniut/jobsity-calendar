@@ -2,11 +2,17 @@ import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
 import { pipe } from "fp-ts/lib/pipeable";
 import { DateTime } from "luxon";
-import React, { FC } from "react";
-import { getOffset } from "../helpers/functions/getOffset";
+import React from "react";
 import { Props as ReminderProps } from "./ReminderDetails";
 import { ReminderThumbnail } from "./ReminderThumbnail";
 import { colors } from "./theme";
+
+export const getOffset = (rect: DOMRect) => ({
+  left: rect.left + window.scrollX,
+  top: rect.top + window.scrollY,
+  right: rect.right + window.scrollX,
+  bottom: rect.bottom + window.scrollY,
+});
 
 export interface Props {
   date: DateTime;
@@ -15,8 +21,7 @@ export interface Props {
     day: DateTime,
     active: boolean,
     positionX: number,
-    positionY: number,
-    isEnding: boolean
+    positionY: number
   ) => void;
   selectReminder: (id: number) => void;
   reminders: Array<ReminderProps>;
@@ -40,9 +45,8 @@ export const Day = ({
         addReminder(
           date,
           active,
-          getOffset(e.target as HTMLElement).right,
-          getOffset(e.target as HTMLElement).top,
-          isEnding
+          getOffset(e.currentTarget.getBoundingClientRect()).right,
+          getOffset(e.currentTarget.getBoundingClientRect()).top
         )
       }
     >
@@ -56,7 +60,7 @@ export const Day = ({
                 message={r.message}
                 color={r.color}
                 selectReminder={selectReminder}
-                key={r.key}
+                id={r.id}
               />
             ))
           )}
