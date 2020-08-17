@@ -1,19 +1,18 @@
-import { TimePicker, Input, DatePicker, AutoComplete } from "antd";
+import { AutoComplete, DatePicker, Input, TimePicker } from "antd";
 import { css, cx } from "emotion";
-import * as A from "fp-ts/lib/Array";
 import * as AP from "fp-ts/lib/Apply";
+import * as A from "fp-ts/lib/Array";
 import * as E from "fp-ts/lib/Either";
-import { pipe, flow, constVoid } from "fp-ts/lib/function";
+import { constVoid, flow, pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
 import { DateTime } from "luxon";
-import { Moment } from "moment";
+import moment, { Moment } from "moment";
 import React, { useEffect, useState } from "react";
-import { from, timer, BehaviorSubject, Subject } from "rxjs";
+import { from, Subject, timer } from "rxjs";
 import { debounce } from "rxjs/operators";
 import { IRestResponse } from "typed-rest-client";
 import { Env } from "../env";
 import { lazyUnsubscribe } from "../helpers/functions/lazyUnsubscribe";
-import moment from "moment";
 import { useConst } from "../hooks/custom";
 import { useObservableState } from "../hooks/rxjs";
 
@@ -42,22 +41,20 @@ export const Reminder = (props: Props) => {
   const [weather, setWeather] = useState<string>("");
   const key = props.id;
 
-  const updatedData: () => Props = () => {
-    return {
-      id: key,
-      color: color,
-      env: props.env,
-      day: day,
-      time: timeO,
-      city: city,
-      message: message,
-      goesLeft: props.goesLeft,
-      positionX: props.positionX,
-      positionY: props.positionY,
-      saveReminder: props.saveReminder,
-      deleteReminder: props.deleteReminder,
-    };
-  };
+  const updatedData: () => Props = () => ({
+    id: key,
+    color: color,
+    env: props.env,
+    day: day,
+    time: timeO,
+    city: city,
+    message: message,
+    goesLeft: props.goesLeft,
+    positionX: props.positionX,
+    positionY: props.positionY,
+    saveReminder: props.saveReminder,
+    deleteReminder: props.deleteReminder,
+  });
 
   const cityInput$ = useConst(() => new Subject<string>());
   const cityInput = useObservableState(
@@ -77,10 +74,18 @@ export const Reminder = (props: Props) => {
     () =>
       lazyUnsubscribe(
         from(
-          props.env.googlePlaceAPI.autocompleteCity({ search: cityInput })()
+          props.env.jawgdMapsAPI.autocompleteCity({ search: cityInput })()
         ).subscribe({
-          next: E.fold(constVoid, (xs) =>
-            setCityOptions(A.array.map(xs.predictions, (p) => p.description))
+          next: E.fold(
+            constVoid,
+            flow(A.takeLeft(6), (xs) =>
+              setCityOptions(
+                A.array.map(xs, (p) => {
+                  console.log(p.properties.name);
+                  return p.properties.name ?? "";
+                })
+              )
+            )
           ),
         })
       ),
@@ -148,9 +153,8 @@ export const Reminder = (props: Props) => {
           className={styles.autoSelect}
           placeholder="Search city"
           onChange={(e) => cityInput$.next(e)}
-        >
-          {cityOptions}
-        </AutoComplete>
+          options={A.array.map(cityOptions, (x) => ({ label: x, value: x }))}
+        />
       </div>
       <div>
         {pipe(

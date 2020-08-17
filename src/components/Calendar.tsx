@@ -34,6 +34,15 @@ export const Calendar = ({ date, env }: Props) => {
     monthInterval.start.startOf("week").minus({ day: weekOffset }),
     monthInterval.end.endOf("week").minus({ day: weekOffset })
   );
+
+  const deleteReminder = (key: number) => {
+    const filteredReminders = A.filter((r: ReminderProps) => r.id !== key)(
+      reminders
+    );
+    console.log(reminders);
+    setDisplayReminder(false);
+  };
+
   const dayIntervals = interval.splitBy({ day: 1 });
 
   return (
@@ -84,10 +93,7 @@ export const Calendar = ({ date, env }: Props) => {
                       positionX: positionX,
                       positionY: positionY,
                       deleteReminder: (key: number) => {
-                        const filteredReminders = A.filter(
-                          (r: ReminderProps) => r.id !== key
-                        )(reminders);
-                        setReminders(filteredReminders);
+                        console.log(reminders);
                         setDisplayReminder(false);
                       },
                       saveReminder: (newReminder: ReminderProps) => {

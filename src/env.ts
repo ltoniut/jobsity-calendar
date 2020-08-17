@@ -1,6 +1,6 @@
-import { GooglePlaceAPI, OpenWeatherAPI } from "./lib/api";
+import { JawgdMapsAPI, OpenWeatherAPI } from "./lib/api";
 
 export interface Env {
-  googlePlaceAPI: GooglePlaceAPI;
+  jawgdMapsAPI: JawgdMapsAPI;
   openWeatherAPI: OpenWeatherAPI;
 }
