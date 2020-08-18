@@ -17,7 +17,7 @@ import { useConst } from "../hooks/custom";
 import { useObservableState } from "../hooks/rxjs";
 
 export interface Props {
-  id: number;
+  id: string;
   env: Env;
   color: string;
   day: DateTime;
@@ -27,8 +27,8 @@ export interface Props {
   positionX: number;
   positionY: number;
   goesLeft: boolean;
-  saveReminder: (props: Props) => void;
-  deleteReminder: (id: number) => void;
+  saveReminder: (props: Props, id: string) => void;
+  deleteReminder: (id: string) => void;
 }
 
 export const Reminder = (props: Props) => {
@@ -60,14 +60,6 @@ export const Reminder = (props: Props) => {
   const cityInput = useObservableState(
     useConst(() => cityInput$.pipe(debounce(() => timer(400)))),
     city
-  );
-
-  // DEBUG API
-  const [
-    googlePlacesAutocompleteApiCall,
-    setGooglePlacesAutocompleteApiCall,
-  ] = useState<O.Option<E.Either<unknown, IRestResponse<unknown>>>>(
-    () => O.none
   );
 
   useEffect(
@@ -107,8 +99,9 @@ export const Reminder = (props: Props) => {
               from(
                 props.env.openWeatherAPI.getCurrentWeather({
                   city,
+                  dt: time,
                 })()
-              ).subscribe((x) => setOpenWeatherApiCall(O.some(x)))
+              ).subscribe((x) => setWeather(""))
             )
         )
       ),
@@ -153,20 +146,9 @@ export const Reminder = (props: Props) => {
           className={styles.autoSelect}
           placeholder="Search city"
           onChange={(e) => cityInput$.next(e)}
+          onSelect={(e) => setCity(e)}
           options={A.array.map(cityOptions, (x) => ({ label: x, value: x }))}
         />
-      </div>
-      <div>
-        {pipe(
-          googlePlacesAutocompleteApiCall,
-          O.fold(
-            () => <div>Nothing yet.</div>,
-            E.fold(
-              (e) => <div>Error: {JSON.stringify(e)}</div>,
-              (x) => <div>Result: {JSON.stringify(x)}</div>
-            )
-          )
-        )}
       </div>
       <div>
         {pipe(
@@ -174,8 +156,8 @@ export const Reminder = (props: Props) => {
           O.fold(
             () => <div>Nothing yet.</div>,
             E.fold(
-              (e) => <div>Error: {JSON.stringify(e)}</div>,
-              (x) => <div>Result: {JSON.stringify(x.result)}</div>
+              (e) => <div />,
+              (x) => <div>Weather: {JSON.stringify(x.result)}</div>
             )
           )
         )}
@@ -194,7 +176,9 @@ export const Reminder = (props: Props) => {
           ))
         )}
       </div>
-      <button onClick={() => props.saveReminder(updatedData())}>Save</button>
+      <button onClick={() => props.saveReminder(updatedData(), props.id)}>
+        Save
+      </button>
       <button onClick={() => props.deleteReminder(props.id)}>Delete</button>
     </form>
   );

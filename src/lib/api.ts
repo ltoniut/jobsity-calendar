@@ -7,6 +7,8 @@ import * as T from "fp-ts/lib/Task";
 import * as TE from "fp-ts/lib/TaskEither";
 import * as t from "io-ts";
 import { IRestResponse } from "typed-rest-client";
+import { Moment } from "moment";
+import { DateTime } from "luxon";
 
 const userAgent = "challenge-calendar";
 
@@ -19,6 +21,11 @@ const AutocompleteCityFeatureC = t.type({
   properties: t.type({ name: t.string }),
 });
 type AutocompleteCityFeatureC = t.TypeOf<typeof AutocompleteCityFeatureC>;
+
+const WeatherC = t.type({
+  weather: t.type({ description: t.string }),
+});
+type WeatherTypeC = t.TypeOf<typeof WeatherC>;
 
 export interface JawgdMapsAPI {
   autocompleteCity: (_: {
@@ -71,7 +78,8 @@ export const jawgdMapsAPI = (apiKey: string): JawgdMapsAPI => {
 export interface OpenWeatherAPI {
   getCurrentWeather: (_: {
     city: string;
-  }) => TE.TaskEither<unknown, IRestResponse<unknown>>;
+    dt: Moment;
+  }) => TE.TaskEither<unknown, WeatherTypeC>;
 }
 
 /**
@@ -80,11 +88,11 @@ export interface OpenWeatherAPI {
  */
 export const openWeatherAPI = (apiKey: string): OpenWeatherAPI => {
   return {
-    getCurrentWeather: ({ city }) =>
+    getCurrentWeather: ({ city, dt }) =>
       TE.tryCatch(
         () =>
           axios.get(
-            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`
+            `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&&dt=${dt.utc}`
           ),
         identity
       ),

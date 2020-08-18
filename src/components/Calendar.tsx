@@ -1,24 +1,46 @@
 import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
+import * as R from "fp-ts/lib/Record";
 import { flow, pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
 import { DateTime, Info, Interval } from "luxon";
 import React, { useState } from "react";
 import { Env } from "../env";
 import { Day } from "./Day";
-import { Props as ReminderProps, Reminder } from "./ReminderDetails";
+import { Reminder as ReminderDetails } from "./ReminderDetails";
 import { colors } from "./theme";
+import { Moment } from "moment";
 
 const weekdays = Info.weekdays();
+
+export interface Reminder {
+  env: Env;
+  color: string;
+  day: DateTime;
+  time: O.Option<Moment>;
+  city: string;
+  message: string;
+  positionX: number;
+  positionY: number;
+  goesLeft: boolean;
+}
 
 interface Props {
   date: DateTime;
   env: Env;
 }
 
+const getIdentifier: (r: Reminder) => string = (r) =>
+  `${r.day.toISO()}#${r.time._tag}#${r.message}#${r.color}#${r.city}#${
+    r.positionX
+  }#${r.positionY}#${r.goesLeft}`;
+
 export const Calendar = ({ date, env }: Props) => {
-  const [reminders, setReminders] = useState<Array<ReminderProps>>([]);
-  const [reminderData, setReminderData] = useState<ReminderProps>();
+  const [reminderRecord, setReminderRecord] = useState<
+    Record<string, Reminder>
+  >({});
+
+  const [reminderData, setReminderData] = useState<Reminder>();
   const [displayReminder, setDisplayReminder] = useState<boolean>();
   const [currentKey, setCurrentKey] = useState<number>(1);
   const weekOffset = 1;
@@ -34,16 +56,20 @@ export const Calendar = ({ date, env }: Props) => {
     monthInterval.start.startOf("week").minus({ day: weekOffset }),
     monthInterval.end.endOf("week").minus({ day: weekOffset })
   );
+  const dayIntervals = interval.splitBy({ day: 1 });
 
-  const deleteReminder = (key: number) => {
-    const filteredReminders = A.filter((r: ReminderProps) => r.id !== key)(
-      reminders
-    );
-    console.log(reminders);
+  const deleteReminder = (id: string) => {
+    setReminderRecord(R.deleteAt(id)(reminderRecord));
     setDisplayReminder(false);
   };
 
-  const dayIntervals = interval.splitBy({ day: 1 });
+  const saveReminder = (newReminder: Reminder, id: string) => {
+    const newId = getIdentifier(newReminder);
+    setReminderRecord(
+      R.insertAt(newId, newReminder)(R.deleteAt(id)(reminderRecord))
+    );
+    setDisplayReminder(false);
+  };
 
   return (
     <div className={styles.component}>
@@ -67,7 +93,7 @@ export const Calendar = ({ date, env }: Props) => {
                 active={monthInterval.contains(d)}
                 selectReminder={(key) => {
                   setReminderData(
-                    A.filter((r: ReminderProps) => r.id === key)(reminders)[0]
+                    R.toArray(reminderRecord).filter((r) => r[0] === key)[0][1]
                   );
                   if (reminderData) {
                     setDisplayReminder(true);
@@ -81,50 +107,37 @@ export const Calendar = ({ date, env }: Props) => {
                   goesLeft: boolean
                 ) => {
                   if (active) {
-                    const newReminder: ReminderProps = {
+                    const newReminder: Reminder = {
                       color: "white",
                       day: day,
                       time: O.none,
                       city: "",
                       message: "",
-                      id: currentKey,
                       env: env,
                       goesLeft: goesLeft,
                       positionX: positionX,
                       positionY: positionY,
-                      deleteReminder: (key: number) => {
-                        console.log(reminders);
-                        setDisplayReminder(false);
-                      },
-                      saveReminder: (newReminder: ReminderProps) => {
-                        let reminder = A.filter(
-                          (r: ReminderProps) => r.id === newReminder.id
-                        )(reminders)[0];
-                        if (!reminder) {
-                          setReminders([...reminders, newReminder]);
-                        } else {
-                          reminder = newReminder;
-                        }
-                        setDisplayReminder(false);
-                      },
-                    } as const;
-                    setCurrentKey(currentKey + 1);
-
-                    if (newReminder) {
-                      setReminderData(newReminder);
-                      setDisplayReminder(true);
-                    }
+                    };
+                    setReminderData(newReminder);
+                    setDisplayReminder(true);
                   }
                 }}
-                reminders={A.filter((r: ReminderProps) => r.day.day === d.day)(
-                  reminders
+                reminders={R.toArray(reminderRecord).filter(
+                  (r) => r[1].day.day === d.day
                 )}
               />
             )
           )
         )}
       </section>
-      {displayReminder && reminderData && <Reminder {...reminderData} />}
+      {displayReminder && reminderData && (
+        <ReminderDetails
+          {...reminderData}
+          id={getIdentifier(reminderData)}
+          deleteReminder={deleteReminder}
+          saveReminder={saveReminder}
+        />
+      )}
     </div>
   );
 };

@@ -6,6 +6,7 @@ import React from "react";
 import { Props as ReminderProps } from "./ReminderDetails";
 import { ReminderThumbnail } from "./ReminderThumbnail";
 import { colors } from "./theme";
+import { Reminder } from "./Calendar";
 
 export const getOffset = (rect: DOMRect) => ({
   left: rect.left + window.scrollX,
@@ -24,8 +25,8 @@ export interface Props {
     positionY: number,
     goesLeft: boolean
   ) => void;
-  selectReminder: (id: number) => void;
-  reminders: Array<ReminderProps>;
+  selectReminder: (id: string) => void;
+  reminders: [string, Reminder][];
 }
 
 export const Day = ({
@@ -60,10 +61,10 @@ export const Day = ({
             reminders,
             A.map((r) => (
               <ReminderThumbnail
-                message={r.message}
-                color={r.color}
+                message={r[1].message}
+                color={r[1].color}
                 selectReminder={selectReminder}
-                id={r.id}
+                id={r[0]}
               />
             ))
           )}

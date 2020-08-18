@@ -4,10 +4,10 @@ import { Tooltip } from "antd";
 
 export interface Props {
   [x: string]: any;
-  id: number;
+  id: string;
   color: string;
   message: string;
-  selectReminder: (id: number) => void;
+  selectReminder: (id: string) => void;
 }
 
 export const ReminderThumbnail = ({
@@ -17,7 +17,7 @@ export const ReminderThumbnail = ({
   selectReminder,
 }: Props) => {
   return (
-    <Tooltip title={message + " " + id} placement="bottom">
+    <Tooltip title={message} placement="bottom">
       <div
         className={styles.component({ color })}
         onClick={(e) => {
