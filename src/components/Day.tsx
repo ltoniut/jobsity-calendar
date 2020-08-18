@@ -83,5 +83,8 @@ const styles = {
   reminders: css`
     padding-bottom: 0px;
     padding-left: 0px;
+    display: grid;
+    grid-gap: 0.1rem;
+    grid-template-columns: repeat(auto-fit, 1.1rem);
   `,
 };
