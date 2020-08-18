@@ -31,8 +31,8 @@ export const ReminderThumbnail = ({
 
 const styles = {
   component: ({ color }: { color: string }) => css`
-    width: 0.5rem;
-    height: 0.5rem;
+    width: 1rem;
+    height: 1rem;
     background-color: ${color};
     border-style: solid;
     border-width: thin;

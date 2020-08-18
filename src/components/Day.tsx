@@ -3,17 +3,9 @@ import * as A from "fp-ts/lib/Array";
 import { pipe } from "fp-ts/lib/pipeable";
 import { DateTime } from "luxon";
 import React from "react";
-import { Props as ReminderProps } from "./ReminderDetails";
+import { Reminder } from "./Calendar";
 import { ReminderThumbnail } from "./ReminderThumbnail";
 import { colors } from "./theme";
-import { Reminder } from "./Calendar";
-
-export const getOffset = (rect: DOMRect) => ({
-  left: rect.left + window.scrollX,
-  top: rect.top + window.scrollY,
-  right: rect.right + window.scrollX,
-  bottom: rect.bottom + window.scrollY,
-});
 
 export interface Props {
   date: DateTime;
