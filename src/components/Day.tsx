@@ -10,13 +10,7 @@ import { colors } from "./theme";
 export interface Props {
   date: DateTime;
   active: boolean;
-  addReminder: (
-    day: DateTime,
-    active: boolean,
-    positionX: number,
-    positionY: number,
-    goesLeft: boolean
-  ) => void;
+  addReminder: (day: DateTime, active: boolean) => void;
   selectReminder: (id: string) => void;
   reminders: [string, Reminder][];
 }
@@ -37,13 +31,7 @@ export const Day = ({
       className={styles.component({ isWeekend })}
       onClick={(e) => {
         const rect = e.currentTarget.getBoundingClientRect();
-        return addReminder(
-          date,
-          active,
-          isEnding ? rect.left : rect.right,
-          rect.top,
-          isEnding
-        );
+        return addReminder(date, active);
       }}
     >
       <div className={styles.day({ active, isWeekend })}>{date.day}</div>

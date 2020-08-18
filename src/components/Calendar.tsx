@@ -20,9 +20,6 @@ export interface Reminder {
   time: O.Option<Moment>;
   city: string;
   message: string;
-  positionX: number;
-  positionY: number;
-  goesLeft: boolean;
 }
 
 interface Props {
@@ -31,9 +28,7 @@ interface Props {
 }
 
 const getIdentifier: (r: Reminder) => string = (r) =>
-  `${r.day.toISO()}#${r.time._tag}#${r.message}#${r.color}#${r.city}#${
-    r.positionX
-  }#${r.positionY}#${r.goesLeft}`;
+  `${r.day.toISO()}#${r.time._tag}#${r.message}#${r.color}#${r.city}`;
 
 export const Calendar = ({ date, env }: Props) => {
   const [reminderRecord, setReminderRecord] = useState<
@@ -99,13 +94,7 @@ export const Calendar = ({ date, env }: Props) => {
                     setDisplayReminder(true);
                   }
                 }}
-                addReminder={(
-                  day: DateTime,
-                  active: boolean,
-                  positionX: number,
-                  positionY: number,
-                  goesLeft: boolean
-                ) => {
+                addReminder={(day: DateTime, active: boolean) => {
                   if (active) {
                     const newReminder: Reminder = {
                       color: "white",
@@ -114,9 +103,6 @@ export const Calendar = ({ date, env }: Props) => {
                       city: "",
                       message: "",
                       env: env,
-                      goesLeft: goesLeft,
-                      positionX: positionX,
-                      positionY: positionY,
                     };
                     setReminderData(newReminder);
                     setDisplayReminder(true);

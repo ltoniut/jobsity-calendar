@@ -31,9 +31,6 @@ export interface Props {
   time: O.Option<Moment>;
   city: string;
   message: string;
-  positionX: number;
-  positionY: number;
-  goesLeft: boolean;
   saveReminder: (props: Props, id: string) => void;
   deleteReminder: (id: string) => void;
 }
@@ -55,9 +52,6 @@ export const Reminder = (props: Props) => {
     time: timeO,
     city: city,
     message: message,
-    goesLeft: props.goesLeft,
-    positionX: props.positionX,
-    positionY: props.positionY,
     saveReminder: props.saveReminder,
     deleteReminder: props.deleteReminder,
   });
