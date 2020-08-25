@@ -1,11 +1,14 @@
 import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
+import * as O from "fp-ts/lib/Option";
 import { pipe } from "fp-ts/lib/pipeable";
 import { DateTime } from "luxon";
 import React from "react";
+
 import { Reminder } from "./Calendar";
 import { ReminderThumbnail } from "./ReminderThumbnail";
 import { colors } from "./theme";
+import moment from "moment";
 
 export interface Props {
   date: DateTime;
@@ -45,6 +48,13 @@ export const Day = ({
                 color={r[1].color}
                 selectReminder={selectReminder}
                 id={r[0]}
+                time={pipe(
+                  r[1].time,
+                  O.fold(
+                    () => moment(),
+                    (a) => a
+                  )
+                )}
               />
             ))
           )}
