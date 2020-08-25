@@ -16,7 +16,7 @@ const AutocompleteCityC = t.type({
 type AutocompleteCityC = t.TypeOf<typeof AutocompleteCityC>;
 
 const AutocompleteCityFeatureC = t.type({
-  properties: t.type({ name: t.string }),
+  properties: t.type({ name: t.string, country: t.string }),
 });
 type AutocompleteCityFeatureC = t.TypeOf<typeof AutocompleteCityFeatureC>;
 

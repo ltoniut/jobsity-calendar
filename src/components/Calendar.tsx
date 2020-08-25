@@ -1,10 +1,11 @@
 import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
+import * as O from "fp-ts/lib/Option";
 import * as R from "fp-ts/lib/Record";
 import { flow, pipe } from "fp-ts/lib/function";
-import * as O from "fp-ts/lib/Option";
 import { DateTime, Info, Interval } from "luxon";
 import React, { useState } from "react";
+
 import { Env } from "../env";
 import { Day } from "./Day";
 import { Reminder as ReminderDetails } from "./ReminderDetails";
@@ -60,10 +61,16 @@ export const Calendar = ({ date, env }: Props) => {
 
   const saveReminder = (newReminder: Reminder, id: string) => {
     const newId = getIdentifier(newReminder);
-    setReminderRecord(
-      R.insertAt(newId, newReminder)(R.deleteAt(id)(reminderRecord))
-    );
-    setDisplayReminder(false);
+    if (
+      newReminder.city &&
+      newReminder.message &&
+      !O.isNone(newReminder.time)
+    ) {
+      setReminderRecord(
+        R.insertAt(newId, newReminder)(R.deleteAt(id)(reminderRecord))
+      );
+      setDisplayReminder(false);
+    }
   };
 
   return (

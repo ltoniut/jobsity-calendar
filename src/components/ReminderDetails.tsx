@@ -1,27 +1,20 @@
-import {
-  AutoComplete,
-  Button,
-  DatePicker,
-  Input,
-  TimePicker,
-  Modal,
-} from "antd";
+import { AutoComplete, DatePicker, Input, TimePicker, Modal } from "antd";
 import { css, cx } from "emotion";
 import * as AP from "fp-ts/lib/Apply";
 import * as A from "fp-ts/lib/Array";
 import * as E from "fp-ts/lib/Either";
-import { constVoid, flow, identity, not, pipe } from "fp-ts/lib/function";
+import { constVoid, flow, pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
 import { DateTime } from "luxon";
 import moment, { Moment } from "moment";
 import React, { useState } from "react";
 import { from, Subject, timer } from "rxjs";
 import { debounce } from "rxjs/operators";
+
 import { Env } from "../env";
 import { lazyUnsubscribe } from "../helpers/functions/lazyUnsubscribe";
 import { useConst, useEffectSkipping } from "../hooks/custom";
 import { useObservableState } from "../hooks/rxjs";
-import { WeatherC } from "../lib/api";
 
 export interface Props {
   id: string;
@@ -71,7 +64,11 @@ export const Reminder = (props: Props) => {
             constVoid,
             flow(
               A.takeLeft(6),
-              A.map((p) => p.properties.name ?? ""),
+              A.map((p) =>
+                p.properties.name
+                  ? p.properties.name + ", " + p.properties.country
+                  : ""
+              ),
               setCityOptions
             )
           ),
@@ -120,6 +117,7 @@ export const Reminder = (props: Props) => {
       visible={true}
       onOk={() => props.saveReminder(updatedData(), props.id)}
       onCancel={() => props.deleteReminder(props.id)}
+      cancelText="Delete"
     >
       <div className={styles.container}>
         <div>
@@ -145,6 +143,7 @@ export const Reminder = (props: Props) => {
             placeholder="Write some message"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            maxLength={30}
           />
         </div>
         <div>

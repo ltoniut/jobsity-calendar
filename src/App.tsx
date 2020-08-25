@@ -1,9 +1,9 @@
+import "antd/dist/antd.css";
 import { DateTime } from "luxon";
 import React from "react";
 import "./App.css";
 import { Calendar } from "./components/Calendar";
 import { jawgdMapsAPI, openWeatherAPI } from "./lib/api";
-import "antd/dist/antd.css";
 
 export const App = () => (
   <div className="App">
