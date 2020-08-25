@@ -8,9 +8,10 @@ import React, { useState } from "react";
 
 import { Env } from "../env";
 import { Day } from "./Day";
-import { Reminder as ReminderDetails } from "./ReminderDetails";
+import { ReminderDetails } from "./ReminderDetails";
 import { colors } from "./theme";
 import { Moment } from "moment";
+import moment from "moment";
 
 const weekdays = Info.weekdays();
 
@@ -18,7 +19,7 @@ export interface Reminder {
   env: Env;
   color: string;
   day: DateTime;
-  time: O.Option<Moment>;
+  time: Moment;
   city: string;
   message: string;
 }
@@ -29,7 +30,7 @@ interface Props {
 }
 
 const getIdentifier: (r: Reminder) => string = (r) =>
-  `${r.day.toISO()}#${r.time._tag}#${r.message}#${r.color}#${r.city}`;
+  `${r.day.toISO()}#${r.time.format("LT")}#${r.message}#${r.color}#${r.city}`;
 
 export const Calendar = ({ date, env }: Props) => {
   const [reminderRecord, setReminderRecord] = useState<
@@ -38,7 +39,6 @@ export const Calendar = ({ date, env }: Props) => {
 
   const [reminderData, setReminderData] = useState<Reminder>();
   const [displayReminder, setDisplayReminder] = useState<boolean>();
-  const [currentKey, setCurrentKey] = useState<number>(1);
   const weekOffset = 1;
   const rightWeekOffset = pipe(weekdays, A.takeRight(weekOffset));
   const remainingWeekdays = pipe(weekdays, A.dropRight(weekOffset));
@@ -61,11 +61,7 @@ export const Calendar = ({ date, env }: Props) => {
 
   const saveReminder = (newReminder: Reminder, id: string) => {
     const newId = getIdentifier(newReminder);
-    if (
-      newReminder.city &&
-      newReminder.message &&
-      !O.isNone(newReminder.time)
-    ) {
+    if (newReminder.city && newReminder.message && newReminder.time) {
       setReminderRecord(
         R.insertAt(newId, newReminder)(R.deleteAt(id)(reminderRecord))
       );
@@ -106,7 +102,7 @@ export const Calendar = ({ date, env }: Props) => {
                     const newReminder: Reminder = {
                       color: "white",
                       day: day,
-                      time: O.none,
+                      time: moment(day).startOf("day"),
                       city: "",
                       message: "",
                       env: env,
@@ -126,6 +122,7 @@ export const Calendar = ({ date, env }: Props) => {
       {displayReminder && reminderData && (
         <ReminderDetails
           {...reminderData}
+          time={O.none}
           id={getIdentifier(reminderData)}
           deleteReminder={deleteReminder}
           saveReminder={saveReminder}

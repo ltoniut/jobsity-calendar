@@ -1,6 +1,5 @@
 import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
-import * as O from "fp-ts/lib/Option";
 import { pipe } from "fp-ts/lib/pipeable";
 import { DateTime } from "luxon";
 import React from "react";
@@ -8,7 +7,6 @@ import React from "react";
 import { Reminder } from "./Calendar";
 import { ReminderThumbnail } from "./ReminderThumbnail";
 import { colors } from "./theme";
-import moment from "moment";
 
 export interface Props {
   date: DateTime;
@@ -27,7 +25,6 @@ export const Day = ({
 }: Props) => {
   const weekday = date.weekday;
   const isWeekend = weekday === 6 || weekday === 7;
-  const isEnding = 4 < weekday && weekday < 7;
 
   return (
     <div
@@ -42,19 +39,13 @@ export const Day = ({
         {active &&
           pipe(
             reminders,
-            A.map((r) => (
+            A.map(([id, reminder]) => (
               <ReminderThumbnail
-                message={r[1].message}
-                color={r[1].color}
+                message={reminder.message}
+                color={reminder.color}
                 selectReminder={selectReminder}
-                id={r[0]}
-                time={pipe(
-                  r[1].time,
-                  O.fold(
-                    () => moment(),
-                    (a) => a
-                  )
-                )}
+                id={id}
+                time={reminder.time}
               />
             ))
           )}

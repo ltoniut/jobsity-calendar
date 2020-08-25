@@ -15,6 +15,7 @@ import { Env } from "../env";
 import { lazyUnsubscribe } from "../helpers/functions/lazyUnsubscribe";
 import { useConst, useEffectSkipping } from "../hooks/custom";
 import { useObservableState } from "../hooks/rxjs";
+import { Reminder } from "./Calendar";
 
 export interface Props {
   id: string;
@@ -24,11 +25,11 @@ export interface Props {
   time: O.Option<Moment>;
   city: string;
   message: string;
-  saveReminder: (props: Props, id: string) => void;
+  saveReminder: (props: Reminder, id: string) => void;
   deleteReminder: (id: string) => void;
 }
 
-export const Reminder = (props: Props) => {
+export const ReminderDetails = (props: Props) => {
   const [cityOptions, setCityOptions] = useState<Array<string>>(() => []);
   const [day, setDay] = useState<DateTime>(props.day);
   const [timeO, setTimeO] = useState<O.Option<Moment>>(() => props.time);
@@ -37,12 +38,18 @@ export const Reminder = (props: Props) => {
   const [message, setMessage] = useState<string>(props.message);
   const [weatherO, setWeatherO] = useState<O.Option<string>>(O.none);
 
-  const updatedData: () => Props = () => ({
+  const updatedData: () => Reminder = () => ({
     id: props.id,
     color: color,
     env: props.env,
     day: day,
-    time: timeO,
+    time: pipe(
+      timeO,
+      O.fold(
+        () => moment(),
+        (a) => a
+      )
+    ),
     city: city,
     message: message,
     saveReminder: props.saveReminder,
