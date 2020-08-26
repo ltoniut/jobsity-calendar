@@ -1,4 +1,11 @@
-import { AutoComplete, DatePicker, Input, Modal, TimePicker } from "antd";
+import {
+  AutoComplete,
+  DatePicker,
+  Input,
+  Modal,
+  TimePicker,
+  Button,
+} from "antd";
 import { css, cx } from "emotion";
 import * as AP from "fp-ts/lib/Apply";
 import * as A from "fp-ts/lib/Array";
@@ -49,6 +56,7 @@ export const ReminderDetails = (props: Props) => {
   const [color, setColor] = useState<string>(props.color);
   const [messageO, setMessageO] = useState<O.Option<string>>(props.messageO);
   const [weatherO, setWeatherO] = useState<O.Option<string>>(O.none);
+  const [isValid, setIsValid] = useState<boolean>(false);
 
   const cityInput$ = useConst(() => new Subject<string>());
   const cityInput = useObservableState(
@@ -107,7 +115,7 @@ export const ReminderDetails = (props: Props) => {
                     second: time.get("second"),
                   }),
                 })()
-              ).subscribe((x) =>
+              ).subscribe((x) => {
                 pipe(
                   x,
                   E.fold(
@@ -119,40 +127,65 @@ export const ReminderDetails = (props: Props) => {
                       setWeatherO
                     )
                   )
-                )
-              )
+                );
+              })
             )
         )
       ),
     [cityO, timeO, day]
   );
 
+  useEffectSkipping(
+    () =>
+      pipe(
+        AP.sequenceS(O.option)({
+          time: timeO,
+          message: messageO,
+          city: cityO,
+        }),
+        O.fold(
+          () => setIsValid(false),
+          () => setIsValid(true)
+        )
+      ),
+    [cityO, timeO, messageO]
+  );
+
   return (
     <Modal
       title={O.getOrElse(() => "New Reminder")(messageO)}
       visible={true}
-      onOk={() =>
-        pipe(
-          AP.sequenceS(O.option)({
-            t: timeO,
-            m: messageO,
-            c: cityO,
-          }),
-          O.fold(constVoid, ({ t, m, c }) => {
-            props.saveReminder(
-              {
-                time: t,
-                color: color,
-                message: m,
-                city: c,
-                day: day,
-              },
-              props.id
-            );
-          })
-        )
-      }
-      onCancel={() => props.deleteReminder(props.id)}
+      footer={[
+        <Button key="delete" onClick={() => props.deleteReminder(props.id)}>
+          Delete
+        </Button>,
+        <Button
+          className={styles.okButton(isValid)}
+          key="ok"
+          type="primary"
+          onClick={() =>
+            pipe(
+              AP.sequenceS(O.option)({
+                time: timeO,
+                message: messageO,
+                city: cityO,
+              }),
+              O.fold(constVoid, (data) => {
+                props.saveReminder(
+                  {
+                    ...data,
+                    color: color,
+                    day: day,
+                  },
+                  props.id
+                );
+              })
+            )
+          }
+        >
+          Ok
+        </Button>,
+      ]}
       cancelText="Delete"
     >
       <div className={styles.container}>
@@ -273,18 +306,13 @@ const styles = {
     border-color: #4fc3f7;
     border-width: thin;
   `,
+  okButton: (isValid: boolean) => css`
+    background-color: ${isValid ? "blue" : "grey"};
+    &:hover {
+      background-color: ${isValid ? "blue" : "grey"};
+    }
+  `,
 };
-
-const direction = (x: number, y: number, goesLeft: boolean) =>
-  goesLeft
-    ? css`
-        right: ${window.innerWidth - x + 5}px;
-        top: ${y + 5}px;
-      `
-    : css`
-        left: ${x + 5}px;
-        top: ${y + 5}px;
-      `;
 
 const colorChoices = [
   "red",
