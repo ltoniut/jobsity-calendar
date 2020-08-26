@@ -14,7 +14,6 @@ import { colors } from "./theme";
 const weekdays = Info.weekdays();
 
 export interface Reminder {
-  env: Env;
   color: string;
   day: DateTime;
   time: Moment;
@@ -101,7 +100,6 @@ export const Calendar = ({ date, env }: Props) => {
                       time: moment(day).startOf("day"),
                       city: "",
                       message: "",
-                      env: env,
                     };
                     setReminderData(newReminder);
                     setDisplayReminder(true);
@@ -118,6 +116,7 @@ export const Calendar = ({ date, env }: Props) => {
       {displayReminder && reminderData && (
         <ReminderDetails
           {...reminderData}
+          env={env}
           timeO={O.fromNullable(reminderData.time)}
           cityO={reminderData.city ? O.fromNullable(reminderData.city) : O.none}
           messageO={
