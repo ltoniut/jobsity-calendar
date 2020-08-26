@@ -89,7 +89,7 @@ export const openWeatherAPI = (apiKey: string): OpenWeatherAPI => ({
             params: {
               q: city,
               apiKey: apiKey,
-              dt: time.utc,
+              dt: time.unix(),
             },
           }),
         constVoid

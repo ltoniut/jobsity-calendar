@@ -1,8 +1,8 @@
 import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
+import { flow, pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
 import * as R from "fp-ts/lib/Record";
-import { flow, pipe } from "fp-ts/lib/function";
 import { DateTime, Info, Interval } from "luxon";
 import React, { useState } from "react";
 
@@ -61,12 +61,10 @@ export const Calendar = ({ date, env }: Props) => {
 
   const saveReminder = (newReminder: Reminder, id: string) => {
     const newId = getIdentifier(newReminder);
-    if (newReminder.city && newReminder.message && newReminder.time) {
-      setReminderRecord(
-        R.insertAt(newId, newReminder)(R.deleteAt(id)(reminderRecord))
-      );
-      setDisplayReminder(false);
-    }
+    setReminderRecord(
+      R.insertAt(newId, newReminder)(R.deleteAt(id)(reminderRecord))
+    );
+    setDisplayReminder(false);
   };
 
   return (
@@ -122,7 +120,11 @@ export const Calendar = ({ date, env }: Props) => {
       {displayReminder && reminderData && (
         <ReminderDetails
           {...reminderData}
-          time={O.none}
+          timeO={O.fromNullable(reminderData.time)}
+          cityO={O.fromNullable(reminderData.city)}
+          messageO={
+            reminderData.message ? O.fromNullable(reminderData.message) : O.none
+          }
           id={getIdentifier(reminderData)}
           deleteReminder={deleteReminder}
           saveReminder={saveReminder}

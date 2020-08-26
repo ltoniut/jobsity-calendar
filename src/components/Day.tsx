@@ -1,5 +1,6 @@
 import { css } from "emotion";
 import * as A from "fp-ts/lib/Array";
+import * as ORD from "fp-ts/lib/Ord";
 import { pipe } from "fp-ts/lib/pipeable";
 import { DateTime } from "luxon";
 import React from "react";
@@ -39,6 +40,11 @@ export const Day = ({
         {active &&
           pipe(
             reminders,
+            A.sort(
+              ORD.ord.contramap(ORD.ordString, ([, r]: [string, Reminder]) =>
+                r.time.format("LT")
+              )
+            ),
             A.map(([id, reminder]) => (
               <ReminderThumbnail
                 message={reminder.message}

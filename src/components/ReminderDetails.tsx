@@ -1,16 +1,17 @@
-import { AutoComplete, DatePicker, Input, TimePicker, Modal } from "antd";
+import { AutoComplete, DatePicker, Input, Modal, TimePicker } from "antd";
 import { css, cx } from "emotion";
 import * as AP from "fp-ts/lib/Apply";
 import * as A from "fp-ts/lib/Array";
 import * as E from "fp-ts/lib/Either";
+import { Eq, eqString } from "fp-ts/lib/Eq";
 import { constVoid, flow, pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
+import { ordString } from "fp-ts/lib/Ord";
 import { DateTime } from "luxon";
 import moment, { Moment } from "moment";
 import React, { useState } from "react";
 import { from, Subject, timer } from "rxjs";
 import { debounce } from "rxjs/operators";
-
 import { Env } from "../env";
 import { lazyUnsubscribe } from "../helpers/functions/lazyUnsubscribe";
 import { useConst, useEffectSkipping } from "../hooks/custom";
@@ -22,20 +23,31 @@ export interface Props {
   env: Env;
   color: string;
   day: DateTime;
-  time: O.Option<Moment>;
-  city: string;
-  message: string;
+  timeO: O.Option<Moment>;
+  cityO: O.Option<string>;
+  messageO: O.Option<string>;
   saveReminder: (props: Reminder, id: string) => void;
   deleteReminder: (id: string) => void;
 }
 
+const { Option } = AutoComplete;
+
+const group = <A extends unknown>(
+  S: Eq<A>
+): ((as: Array<A>) => Array<Array<A>>) => {
+  return A.chop((as) => {
+    const { init, rest } = A.spanLeft((a: A) => S.equals(a, as[0]))(as);
+    return [init, rest];
+  });
+};
+
 export const ReminderDetails = (props: Props) => {
   const [cityOptions, setCityOptions] = useState<Array<string>>(() => []);
   const [day, setDay] = useState<DateTime>(props.day);
-  const [timeO, setTimeO] = useState<O.Option<Moment>>(() => props.time);
-  const [city, setCity] = useState(props.city);
+  const [timeO, setTimeO] = useState<O.Option<Moment>>(() => props.timeO);
+  const [cityO, setCityO] = useState(props.cityO);
   const [color, setColor] = useState<string>(props.color);
-  const [message, setMessage] = useState<string>(props.message);
+  const [messageO, setMessageO] = useState<O.Option<string>>(props.messageO);
   const [weatherO, setWeatherO] = useState<O.Option<string>>(O.none);
 
   const updatedData: () => Reminder = () => ({
@@ -47,19 +59,44 @@ export const ReminderDetails = (props: Props) => {
       timeO,
       O.fold(
         () => moment(),
-        (a) => a
+        (t) => t
       )
     ),
-    city: city,
-    message: message,
+    city: pipe(
+      cityO,
+      O.fold(
+        () => "",
+        (c) => c
+      )
+    ),
+    message: pipe(
+      messageO,
+      O.fold(
+        () => "",
+        (m) => m
+      )
+    ),
     saveReminder: props.saveReminder,
     deleteReminder: props.deleteReminder,
   });
 
+  const trySave = () => {
+    if (O.isSome(messageO) && O.isSome(cityO) && O.isSome(timeO)) {
+      console.log("Entering data");
+      props.saveReminder(updatedData(), props.id);
+    }
+  };
+
   const cityInput$ = useConst(() => new Subject<string>());
   const cityInput = useObservableState(
     useConst(() => cityInput$.pipe(debounce(() => timer(400)))),
-    city
+    pipe(
+      cityO,
+      O.fold(
+        () => "",
+        (c) => c
+      )
+    )
   );
   useEffectSkipping(
     () =>
@@ -70,12 +107,11 @@ export const ReminderDetails = (props: Props) => {
           next: E.fold(
             constVoid,
             flow(
+              A.map((p) => p.properties.name + ", " + p.properties.country),
+              A.sort(ordString),
+              group(eqString),
+              A.filterMap(A.head),
               A.takeLeft(6),
-              A.map((p) =>
-                p.properties.name
-                  ? p.properties.name + ", " + p.properties.country
-                  : ""
-              ),
               setCityOptions
             )
           ),
@@ -95,8 +131,18 @@ export const ReminderDetails = (props: Props) => {
             lazyUnsubscribe(
               from(
                 props.env.openWeatherAPI.getCurrentWeather({
-                  city,
-                  time,
+                  city: pipe(
+                    cityO,
+                    O.fold(
+                      () => "",
+                      (c) => c
+                    )
+                  ),
+                  time: moment(day.valueOf()).set({
+                    hour: time.get("hour"),
+                    minute: time.get("minute"),
+                    second: time.get("second"),
+                  }),
                 })()
               ).subscribe((x) =>
                 pipe(
@@ -115,14 +161,14 @@ export const ReminderDetails = (props: Props) => {
             )
         )
       ),
-    [city, timeO]
+    [cityO, timeO, day]
   );
 
   return (
     <Modal
-      title={message || "New Reminder"}
+      title={O.getOrElse(() => "New Reminder")(messageO)}
       visible={true}
-      onOk={() => props.saveReminder(updatedData(), props.id)}
+      onOk={() => trySave()}
       onCancel={() => props.deleteReminder(props.id)}
       cancelText="Delete"
     >
@@ -148,8 +194,18 @@ export const ReminderDetails = (props: Props) => {
             className={styles.message}
             name="message"
             placeholder="Write some message"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            value={pipe(
+              messageO,
+              O.fold(
+                () => "",
+                (m) => m
+              )
+            )}
+            onChange={(e) => {
+              if (e.target.value) {
+                setMessageO(O.fromNullable(e.target.value));
+              } else setMessageO(O.none);
+            }}
             maxLength={30}
           />
         </div>
@@ -158,9 +214,14 @@ export const ReminderDetails = (props: Props) => {
             className={styles.searchCity}
             placeholder="Search city"
             onChange={(e) => cityInput$.next(e)}
-            onSelect={(e) => setCity(e)}
-            options={A.array.map(cityOptions, (x) => ({ label: x, value: x }))}
-          />
+            onSelect={(e) => setCityO(O.fromNullable(e))}
+          >
+            {cityOptions.map((city) => (
+              <Option key={city} value={city}>
+                {city}
+              </Option>
+            ))}
+          </AutoComplete>
         </div>
         <div>
           {pipe(
