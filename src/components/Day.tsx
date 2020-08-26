@@ -4,7 +4,6 @@ import * as ORD from "fp-ts/lib/Ord";
 import { pipe } from "fp-ts/lib/pipeable";
 import { DateTime } from "luxon";
 import React from "react";
-
 import { Reminder } from "./Calendar";
 import { ReminderThumbnail } from "./ReminderThumbnail";
 import { colors } from "./theme";

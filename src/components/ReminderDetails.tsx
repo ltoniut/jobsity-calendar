@@ -82,7 +82,6 @@ export const ReminderDetails = (props: Props) => {
 
   const trySave = () => {
     if (O.isSome(messageO) && O.isSome(cityO) && O.isSome(timeO)) {
-      console.log("Entering data");
       props.saveReminder(updatedData(), props.id);
     }
   };

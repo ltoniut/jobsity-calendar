@@ -4,14 +4,12 @@ import { flow, pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/lib/Option";
 import * as R from "fp-ts/lib/Record";
 import { DateTime, Info, Interval } from "luxon";
+import moment, { Moment } from "moment";
 import React, { useState } from "react";
-
 import { Env } from "../env";
 import { Day } from "./Day";
 import { ReminderDetails } from "./ReminderDetails";
 import { colors } from "./theme";
-import { Moment } from "moment";
-import moment from "moment";
 
 const weekdays = Info.weekdays();
 
@@ -121,7 +119,7 @@ export const Calendar = ({ date, env }: Props) => {
         <ReminderDetails
           {...reminderData}
           timeO={O.fromNullable(reminderData.time)}
-          cityO={O.fromNullable(reminderData.city)}
+          cityO={reminderData.city ? O.fromNullable(reminderData.city) : O.none}
           messageO={
             reminderData.message ? O.fromNullable(reminderData.message) : O.none
           }
