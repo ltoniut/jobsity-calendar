@@ -50,42 +50,6 @@ export const ReminderDetails = (props: Props) => {
   const [messageO, setMessageO] = useState<O.Option<string>>(props.messageO);
   const [weatherO, setWeatherO] = useState<O.Option<string>>(O.none);
 
-  const updatedData: () => Reminder = () => ({
-    id: props.id,
-    color: color,
-    env: props.env,
-    day: day,
-    time: pipe(
-      timeO,
-      O.fold(
-        () => moment(),
-        (t) => t
-      )
-    ),
-    city: pipe(
-      cityO,
-      O.fold(
-        () => "",
-        (c) => c
-      )
-    ),
-    message: pipe(
-      messageO,
-      O.fold(
-        () => "",
-        (m) => m
-      )
-    ),
-    saveReminder: props.saveReminder,
-    deleteReminder: props.deleteReminder,
-  });
-
-  const trySave = () => {
-    if (O.isSome(messageO) && O.isSome(cityO) && O.isSome(timeO)) {
-      props.saveReminder(updatedData(), props.id);
-    }
-  };
-
   const cityInput$ = useConst(() => new Subject<string>());
   const cityInput = useObservableState(
     useConst(() => cityInput$.pipe(debounce(() => timer(400)))),
@@ -167,7 +131,27 @@ export const ReminderDetails = (props: Props) => {
     <Modal
       title={O.getOrElse(() => "New Reminder")(messageO)}
       visible={true}
-      onOk={() => trySave()}
+      onOk={() =>
+        pipe(
+          AP.sequenceS(O.option)({
+            t: timeO,
+            m: messageO,
+            c: cityO,
+          }),
+          O.fold(constVoid, ({ t, m, c }) => {
+            props.saveReminder(
+              {
+                time: t,
+                color: color,
+                message: m,
+                city: c,
+                day: day,
+              },
+              props.id
+            );
+          })
+        )
+      }
       onCancel={() => props.deleteReminder(props.id)}
       cancelText="Delete"
     >
